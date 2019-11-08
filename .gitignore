@@ -9,6 +9,7 @@ __pycache__/
 # Dataset
 /dataset
 /dataset_out
+/dataset2
 
 # Distribution / packaging
 .Python
