@@ -150,7 +150,7 @@ class Network:
 
 
 class DeepEye:
-    def __init__(self, deep=2, layers=16, model='pupil_deep\models\default.ckpt'):
+    def __init__(self, deep=2, layers=16, model=r'models\default.ckpt'):
 
         self.sess = tf.Session()
 
@@ -165,7 +165,9 @@ class DeepEye:
 
         self.prob_mask = tf.nn.softmax(deepupil_network.output)
 
-        saver.restore(self.sess, model)
+        directory_path = r'{}\models\default.ckpt'.format(os.getcwd())
+
+        saver.restore(self.sess, directory_path)
         print("Model restored.")
 
     def blob_location(self, prob_mask):
