@@ -54,10 +54,10 @@ def pupil_process(exam):
     cv2.destroyAllWindows
 
 
-directory_path = os.getcwd().replace('\\pupil_deep', '')
-dataset = directory_path + "\\dataset"
-dataset_out = directory_path + "\\dataset_out"
-csv_dataset = directory_path + "\\dataset\\dataset.csv"
+directory_path = os.getcwd().replace(r'\pupil_deep', '')
+dataset = directory_path + r"\dataset"
+dataset_out = directory_path + r"\dataset_out"
+csv_dataset = directory_path + r"\dataset\dataset.csv"
 exams = os.listdir(dataset)
 
 with open(csv_dataset, 'a', newline='') as csvfile:
