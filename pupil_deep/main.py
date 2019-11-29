@@ -1,7 +1,7 @@
 import pupil_deep
 import cv2
-import os
-import numpy as np
+#import os
+#import numpy as np
 import csv
 
 
