@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-import os
 
 
 class Network:
@@ -38,13 +37,13 @@ class Network:
             x_orig = x
 
             x = tf.layers.conv2d(x, filters, [3, 3], padding='SAME')
-
+            
             x = tf.layers.batch_normalization(x, training=self.is_training, reuse=self.reuse, momentum=0.99,
                                               renorm=True)
             x = tf.nn.relu(x, name='relu')
 
             x = tf.layers.conv2d(x, filters, [3, 3], padding='SAME')
-
+            
             x = tf.layers.batch_normalization(x, training=self.is_training, reuse=self.reuse, momentum=0.99,
                                               renorm=True)
 
@@ -83,14 +82,14 @@ class Network:
         x_orig = x
 
         x = tf.layers.conv2d(x, filters, [3, 3], padding='SAME', dilation_rate=dilatation)
-
+        
         x = tf.layers.batch_normalization(x, training=self.is_training, reuse=self.reuse, momentum=0.99,
                                           renorm=True)
 
         x = tf.nn.relu(x, name='relu')
 
         x = tf.layers.conv2d(x, filters, [3, 3], padding='SAME', dilation_rate=dilatation)
-
+        
         x = tf.layers.batch_normalization(x, training=self.is_training, reuse=self.reuse, momentum=0.99,
                                           renorm=True)
 
@@ -108,27 +107,28 @@ class Network:
             x_3 = self.atrous_unit(x, filters, 16)
             x_4 = self.conv_unit(x, filters)
             x_5 = tf.layers.max_pooling2d(x, [2, 2], [2, 2], padding='SAME')
-
+            
             shape_orig = tf.shape(x)
             shape_pool = tf.shape(x_5)
-
+            
             x_5 = tf.pad(x_5, [[0, 0], [shape_orig[1] - shape_pool[1], 0], [shape_orig[2] - shape_pool[2], 0], [0, 0]])
 
             x_5 = tf.reshape(x_5, tf.shape(x))
 
             x = tf.concat([x_1, x_2, x_3, x_4, x_5], 3)
-
+            
             x = tf.layers.conv2d(x, filters, [1, 1], padding='SAME')
 
             x = tf.layers.batch_normalization(x, training=self.is_training, reuse=self.reuse, momentum=0.99,
                                               renorm=True)
             x = tf.nn.relu(x, name='relu')
-
+            
             return x
 
     def build_net(self):
         print(self.name)
         with tf.variable_scope(self.name, reuse=self.reuse):
+            
             x = tf.reshape(self.imgs, [1, tf.shape(self.imgs)[0], tf.shape(self.imgs)[1], 1])
             orig_shapes = [tf.shape(self.imgs)[0], tf.shape(self.imgs)[1]]
 
@@ -143,14 +143,14 @@ class Network:
 
             x = self.conv1x1(x, 2)
             self.y_mlp = x
-
+            
             x = tf.image.resize_bilinear(x, [orig_shapes[0], orig_shapes[1]])
-
+            
             return x
 
 
 class DeepEye:
-    def __init__(self, deep=2, layers=16, model=r'models\default.ckpt'):
+    def __init__(self, deep=2, layers=16, model='models/default.ckpt'):
 
         self.sess = tf.Session()
 
@@ -165,9 +165,7 @@ class DeepEye:
 
         self.prob_mask = tf.nn.softmax(deepupil_network.output)
 
-        directory_path = r'{}\models\default.ckpt'.format(os.getcwd())
-
-        saver.restore(self.sess, directory_path)
+        saver.restore(self.sess, model)
         print("Model restored.")
 
     def blob_location(self, prob_mask):
@@ -232,7 +230,6 @@ class DeepEye:
                 feed_dict={self.frame_input: frame})
 
             prob_mask = prob_mask[0:, :, 0]
-
         return self.blob_location(prob_mask)
 
     def restart_tracker(self):

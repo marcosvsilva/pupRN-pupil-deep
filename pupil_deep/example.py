@@ -1,12 +1,11 @@
-import pupil_deep
+import deepeye
 import cv2
-#import os
-#import numpy as np
-import csv
+import os
+import numpy as np
 
 
 def pupil_process(exam):
-    eye_tracker = pupil_deep.DeepEye()
+    eye_tracker = deepeye.DeepEye()
     number_frame = 0
 
     while True:
