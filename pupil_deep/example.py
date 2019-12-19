@@ -20,15 +20,15 @@ def pupil_process(exam):
         yuv[:, :, 0] = cv2.equalizeHist(yuv[:, :, 0])
         bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
 
-        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-        gaussian = cv2.GaussianBlur(gray, (9, 9), 3)
-        median = cv2.medianBlur(gaussian, 3)
+        #gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        #gaussian = cv2.GaussianBlur(gray, (9, 9), 3)
+        #median = cv2.medianBlur(gaussian, 3)
 
-        kernel = np.ones((5, 5), np.uint8)
-        erode = cv2.erode(median, kernel=kernel, iterations=1)
-        dilate = cv2.dilate(erode, kernel=kernel, iterations=1)
+        #kernel = np.ones((5, 5), np.uint8)
+        #erode = cv2.erode(median, kernel=kernel, iterations=1)
+        #dilate = cv2.dilate(erode, kernel=kernel, iterations=1)
 
-        position = eye_tracker.run(dilate)
+        position = eye_tracker.run(bgr)
 
         lin, col = gray.shape
         if 0 < position[0] < lin and 0 < position[1] < col:
