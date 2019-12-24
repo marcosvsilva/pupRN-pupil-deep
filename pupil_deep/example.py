@@ -6,7 +6,7 @@ import numpy as np
 
 def pupil_process(exam):
     eye_tracker = deepeye.DeepEye()
-    #number_frame = 0
+    number_frame = 0
 
     while True:
         _, frame = exam.read()
