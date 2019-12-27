@@ -11,7 +11,7 @@ def pupil_process(exam):
     while True:
         _, frame = exam.read()
 
-        if frame is None and number_frame > 30:
+        if frame is None:
             break
 
         original = np.copy(frame[:, :, 0])
@@ -28,24 +28,26 @@ def pupil_process(exam):
         erode = cv2.erode(median, kernel=kernel, iterations=1)
         dilate = cv2.dilate(erode, kernel=kernel, iterations=1)
 
-        position = eye_tracker.run(bgr)
+        #tf.placeholder(tf.float32, [None, 28, 28, 1])
+
+        position = eye_tracker.run(original)
 
         lin, col = gray.shape
         if 0 < position[0] < lin and 0 < position[1] < col:
             cv2.circle(original, (int(position[0]), int(position[1])), 10, (255, 255, 0), 2)
 
-        text = "frame={}, x={}, y={}".format(number_frame, position[0], position[1])
+        text = 'frame={}, x={}, y={}'.format(number_frame, position[0], position[1])
         cv2.putText(original, text, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv2.LINE_AA)
 
         number_frame += 1
-        path_out = "{}\\{}.png".format(dataset_out, number_frame)
+        path_out = r'{}\{}.png'.format(dataset_out, number_frame)
 
         cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
         cv2.imshow('Analysis', original)
         cv2.waitKey(1)
         cv2.imwrite(path_out, original)
 
-        with open(csv_dataset, 'a') as csvfile:
+        with open(dataset_label, 'a') as csvfile:
             csvfile.write("{},{},{}\n".format(number_frame, position[0], position[1]))
             csvfile.close()
 
@@ -53,16 +55,15 @@ def pupil_process(exam):
     cv2.destroyAllWindows
 
 
-directory_path = os.getcwd().replace(r'\pupil_deep', '')
-dataset = directory_path + r'\dataset'
-dataset_out = directory_path + r'\dataset_out'
-csv_dataset = directory_path + r'\dataset\dataset.csv'
-exams = os.listdir(dataset)
+dataset_path = r'C:\Projects\Datasets\eye_test\movies'
+dataset_out = r'C:\Projects\Datasets\eye_test\out'
+dataset_label = r'C:\Projects\Datasets\eye_test\label\dataset.csv'
+exams = os.listdir(dataset_path)
 
-with open(csv_dataset, 'a', newline='') as csvfile:
+with open(dataset_label, 'a', newline='') as csvfile:
     csvfile.write("frame,x,y\n")
     csvfile.close()
 
 for exam in exams:
-    movie = cv2.VideoCapture("{}/{}".format(dataset, exam))
+    movie = cv2.VideoCapture('{}/{}'.format(dataset_path, exam))
     pupil_process(movie)
