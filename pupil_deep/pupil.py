@@ -1,11 +1,12 @@
 
 class Pupil:
     def __init__(self):
-        self._orientations = ['south', 'north', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']
+        self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
         self._default_color = 0
         self._range_eye = 0
         self._center = []
         self._shape = []
+        self._white_range = range(200, 255)
 
     def pupil_detect(self, image, center):
         self._default_color = image[center[0], center[1]]
@@ -17,8 +18,8 @@ class Pupil:
         edges_position = []
         for orientation in self._orientations:
             i, j = center
-            while 0 <= i <= self._shape[0] and 0 <= j <= self._shape[1]:
-                if image[i, j] not in self._range_eye:
+            while 0 <= i < self._shape[0] and 0 <= j < self._shape[1]:
+                if (image[i, j] not in self._range_eye) and (image[i, j] not in self._white_range):
                     edges_position.append([i, j])
                     break
                 else:
