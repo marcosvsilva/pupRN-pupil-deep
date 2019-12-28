@@ -2,6 +2,7 @@ import deepeye
 import cv2
 import os
 import numpy as np
+from pupil import Pupil
 
 
 class Main:
@@ -14,6 +15,7 @@ class Main:
         self.dataset_out_exam = ''
 
         self.eye_tracker = deepeye.DeepEye()
+        self.pupil = Pupil()
 
     def add_label(self, information):
         with open(r'{}\{}_label.csv'.format(self.dataset_label, self.title), 'a', newline='') as file:
@@ -42,25 +44,36 @@ class Main:
             kernel = np.ones((5, 5), np.uint8)
             erode = cv2.erode(median, kernel=kernel, iterations=1)
             dilate = cv2.dilate(erode, kernel=kernel, iterations=1)
+            threshold = cv2.threshold(dilate, 25, 255, cv2.THRESH_BINARY)[1]
 
-            # tf.placeholder(tf.float32, [None, 28, 28, 1])
+            final = np.copy(dilate)
 
-            position = self.eye_tracker.run(original)
+            position = self.eye_tracker.run(final)
+            edges = self.pupil.pupil_detect(dilate, position)
 
             lin, col = gray.shape
             if 0 < position[0] < lin and 0 < position[1] < col:
-                cv2.circle(original, (int(position[0]), int(position[1])), 10, (255, 255, 0), 2)
+                cv2.circle(final, (int(position[0]), int(position[1])), 10, (255, 255, 0), 2)
+
+            for i in range(len(edges)-1):
+                if 0 < edges[i][0] < lin and 0 < edges[i][1] < col:
+                    if 0 < edges[i+1][0] < lin and 0 < edges[i+1][1] < col:
+                        cv2.line(final, (edges[i][0], edges[i][1]), (edges[i+1][0], edges[i+1][1]), color=(255, 0, 0))
 
             text = 'frame={}, x={}, y={}'.format(number_frame, position[0], position[1])
-            cv2.putText(original, text, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv2.LINE_AA)
+            cv2.putText(final, text, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv2.LINE_AA)
 
             number_frame += 1
-            path_out = r'{}\{}.png'.format(self.dataset_out_exam, number_frame)
+            original_out = r'{}\original_{}.png'.format(self.dataset_out_exam, number_frame)
+            final_out = r'{}\final_{}.png'.format(self.dataset_out_exam, number_frame)
+            presentation = cv2.hconcat([original, final, threshold])
 
             cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-            cv2.imshow('Analysis', original)
+            cv2.imshow('Analysis', presentation)
             cv2.waitKey(1)
-            cv2.imwrite(path_out, original)
+
+            cv2.imwrite(original_out, final)
+            cv2.imwrite(final_out, final)
 
             self.add_label("{},{},{}".format(number_frame, position[0], position[1]))
 
