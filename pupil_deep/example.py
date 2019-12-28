@@ -56,13 +56,20 @@ class Main:
 
             final = np.copy(dilate)
 
-            position = self.eye_tracker.run(final)
-            edges = self.pupil.pupil_detect(final, position)
-            tmp = self.reflections.filter_reflections(dilate, position)
+            center = self.eye_tracker.run(final)
+            default = dilate[center[0], center[1]]
+
+            img_filter = []
+            for line in dilate:
+                img_filter.append([x if x not in range(180, 255) else default for x in line])
+
+            final = np.copy(img_filter)
+
+            edges = self.pupil.pupil_detect(final, center)
 
             lin, col = gray.shape
-            if 0 < position[0] < lin and 0 < position[1] < col:
-                cv2.circle(final, (int(position[0]), int(position[1])), 10, (255, 255, 0), 2)
+            if 0 < center[0] < lin and 0 < center[1] < col:
+                cv2.circle(final, (int(center[0]), int(center[1])), 10, (255, 255, 0), 2)
 
             for i in range(len(edges)-1):
                 if 0 < edges[i][0] < lin and 0 < edges[i][1] < col:
@@ -71,13 +78,13 @@ class Main:
 
             cv2.line(final, (edges[len(edges)-1][0], edges[len(edges)-1][1]), (edges[0][0], edges[0][1]), color=(255, 0, 0))
 
-            text = 'frame={}, x={}, y={}'.format(number_frame, position[0], position[1])
+            text = 'frame={}, x={}, y={}'.format(number_frame, center[0], center[1])
             cv2.putText(final, text, (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv2.LINE_AA)
 
             number_frame += 1
             original_out = r'{}\original_{}.png'.format(self.dataset_out_exam, number_frame)
             final_out = r'{}\final_{}.png'.format(self.dataset_out_exam, number_frame)
-            presentation = cv2.hconcat([original, final, threshold, tmp])
+            presentation = cv2.hconcat([original, final, threshold])
 
             cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
             cv2.imshow('Analysis', presentation)
@@ -86,7 +93,7 @@ class Main:
             cv2.imwrite(original_out, final)
             cv2.imwrite(final_out, final)
 
-            self._add_label("{},{},{}".format(number_frame, position[0], position[1]))
+            self._add_label("{},{},{}".format(number_frame, center[0], center[1]))
 
         exam.release()
         cv2.destroyAllWindows
