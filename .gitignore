@@ -10,6 +10,7 @@ __pycache__/
 /dataset
 /dataset_out
 /dataset2
+/pupil_deep/eye_test
 
 # Distribution / packaging
 .Python
