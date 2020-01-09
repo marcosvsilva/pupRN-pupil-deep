@@ -1,3 +1,5 @@
+import cv2
+from pupil_deep import PupilDeep
 
 class Pupil:
     def __init__(self):
@@ -8,11 +10,19 @@ class Pupil:
         self._shape = []
         self._white_range = range(200, 255)
 
-    def pupil_detect(self, image, center):
-        self._default_color = image[center[0], center[1]]
+        self._pupul_deep = PupilDeep()
+
+    def pupil_detect(self, image):
+        self._center = self._pupul_deep.run(image)
+
+        self._default_color = image[self._center[0], self._center[1]]
+
         self._range_eye = range((self._default_color-int(255*0.05)), (self._default_color+int(255*0.05)))
+
         self._shape = image.shape
-        return self._search_edge(image, center)
+
+        #return self._search_edge(image, center)
+        return (self._center[0], self._center[1]), 2
 
     def _search_edge(self, image, center):
         edges_position = []

@@ -149,27 +149,27 @@ class Network:
             return x
 
 
-class DeepEye:
-    def __init__(self, deep=2, layers=16, model='models/default.ckpt'):
+class PupilDeep:
 
+    def __init__(self, deep=2, layers=16, model='models/default.ckpt'):
         self.sess = tf.Session()
 
         self.frame_input = tf.placeholder(tf.uint8, [288, 384])
 
         input_reshaped_casted = tf.cast(self.frame_input, tf.float32) * (1. / 255)
 
-        deepupil_network = Network('Deep_eye', input_reshaped_casted, 1, is_training=False, reuse=False, deep=deep,
-                                   layers=layers)
+        network = Network('Deep_eye', input_reshaped_casted, 1, is_training=False, reuse=False, deep=deep,
+                          layers=layers)
 
         saver = tf.train.Saver(max_to_keep=0)
 
-        self.prob_mask = tf.nn.softmax(deepupil_network.output)
+        self.prob_mask = tf.nn.softmax(network.output)
 
         saver.restore(self.sess, model)
+
         print("Model restored.")
 
     def blob_location(self, prob_mask):
-
         factor = prob_mask.size / (288.0 * 384.0)
 
         params = cv2.SimpleBlobDetector_Params()
@@ -212,7 +212,6 @@ class DeepEye:
         return out_coordenate
 
     def run(self, frame):
-
         if frame.shape != (288, 384):
 
             orig_size = frame.shape
