@@ -1,18 +1,23 @@
-import cv2
+import numpy as np
 from pupil_deep import PupilDeep
 
 class Pupil:
     def __init__(self):
         self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+
+        self._image = []
         self._default_color = 0
         self._range_eye = 0
         self._center = []
         self._shape = []
+
         self._white_range = range(200, 255)
 
         self._pupul_deep = PupilDeep()
 
     def pupil_detect(self, image):
+        self._image = image
+
         self._center = self._pupul_deep.run(image)
 
         self._default_color = image[self._center[0], self._center[1]]
@@ -21,20 +26,35 @@ class Pupil:
 
         self._shape = image.shape
 
-        #return self._search_edge(image, center)
-        return (self._center[0], self._center[1]), 2
+        points, radius = self._radius()
 
-    def _search_edge(self, image, center):
-        edges_position = []
+        return self._center, radius
+
+    def _radius(self):
+        i, j = self._center
+        radius = np.array([])
+        points = np.array([])
         for orientation in self._orientations:
-            i, j = center
-            while 0 <= i < self._shape[0] and 0 <= j < self._shape[1]:
-                if (image[i, j] not in self._range_eye) and (image[i, j] not in self._white_range):
-                    edges_position.append([i, j])
-                    break
-                else:
-                    i, j = self._calc_coordinates(orientation, (i, j))
-        return edges_position
+            point = np.array(self._search_edge(orientation))
+            points = np.append(points, point)
+            radius = np.append(radius, self._calc_radius(point))
+
+        return points, points.mean()
+
+    def _calc_radius(self, points):
+        if self._center[0] != points[0]:
+            return abs(self._center[0] - points[0])
+        else:
+            return abs(self._center[1] - points[1])
+
+    def _search_edge(self, orientation):
+        i, j = self._center
+        while 0 <= i < self._shape[0] and 0 <= j < self._shape[1]:
+            if (self._image[i, j] not in self._range_eye) and (self._image[i, j] not in self._white_range):
+                break
+            else:
+                i, j = self._calc_coordinates(orientation, (i, j))
+        return [i, j]
 
     def _calc_coordinates(self, orientation, position):
         if orientation == 'northwest':
