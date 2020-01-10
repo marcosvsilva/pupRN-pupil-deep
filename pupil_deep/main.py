@@ -75,7 +75,7 @@ class Main:
 
             center, radius = self._pupil.pupil_detect(img_process)
 
-            cv2.circle(original, center, 20, (255, 255, 255), 2)
+            cv2.circle(original, (center[0], center[1]), 20, (255, 255, 255), 2)
 
             # presentation = cv2.hconcat([eye_img, filter_eye, threshold])
             label = 'Frame = %d, Radius = %d, Center = (%d, %d)' % (number_frame, radius, center[0], center[1])
