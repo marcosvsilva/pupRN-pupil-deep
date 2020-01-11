@@ -1,45 +1,59 @@
 import numpy as np
+import cv2
 from pupil_deep import PupilDeep
+
 
 class Pupil:
     def __init__(self):
         self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
 
+        self._pupul_deep = PupilDeep()
+
+        #Params
         self._image = []
         self._default_color = 0
         self._range_eye = 0
         self._center = []
         self._shape = []
 
-        self._white_range = range(200, 255)
-
-        self._pupul_deep = PupilDeep()
-
     def pupil_detect(self, image):
         self._image = image
 
         self._center = self._pupul_deep.run(image)
 
-        self._default_color = image[self._center[0], self._center[1]]
+        self._image = self._binarize()
 
-        self._range_eye = range((self._default_color-int(255*0.05)), (self._default_color+int(255*0.05)))
+        self._default_color = self._image[self._center[0], self._center[1]]
 
         self._shape = image.shape
 
         points, radius = self._radius()
 
-        return self._center, radius
+        return self._center, int(radius), points, self._image
+
+    def _close_img(self, image, size_kernel):
+        kernel = np.ones((size_kernel, size_kernel), np.uint8)
+        erode = cv2.erode(image, kernel=kernel, iterations=1)
+        return cv2.dilate(erode, kernel=kernel, iterations=1)
+
+    def _binarize(self):
+        threshold = cv2.adaptiveThreshold(self._image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+        threshold = self._close_img(threshold, 5)
+        threshold = self._close_img(threshold, 7)
+        threshold = self._close_img(threshold, 10)
+        return threshold
 
     def _radius(self):
-        i, j = self._center
         radius = np.array([])
-        points = np.array([])
+        points = []
         for orientation in self._orientations:
-            point = np.array(self._search_edge(orientation))
-            points = np.append(points, point)
+            point = self._search_edge(orientation)
+            points.append(point)
             radius = np.append(radius, self._calc_radius(point))
 
-        return points, points.mean()
+        radius.sort()
+        radius = radius[2:6:1]
+        return points, radius.mean()
 
     def _calc_radius(self, points):
         if self._center[0] != points[0]:
@@ -50,7 +64,8 @@ class Pupil:
     def _search_edge(self, orientation):
         i, j = self._center
         while 0 <= i < self._shape[0] and 0 <= j < self._shape[1]:
-            if (self._image[i, j] not in self._range_eye) and (self._image[i, j] not in self._white_range):
+            # if (self._image[i, j] not in self._range_eye) and (self._image[i, j] not in self._white_range):
+            if self._image[i, j] != self._default_color:
                 break
             else:
                 i, j = self._calc_coordinates(orientation, (i, j))
