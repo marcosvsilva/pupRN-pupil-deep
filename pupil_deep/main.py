@@ -11,9 +11,13 @@ class Main:
         self.dataset_out = 'eye_test/out'
         self.dataset_label = 'eye_test/label'
 
-        self._color_circle = (255, 255, 0)
+        self._pupil_color = (255, 255, 0)
+        self._point_color = (170, 170, 0)
+        self._font_color = (255, 255, 0)
 
-        self._position_text = (120, 30)
+        self._size_point_pupil = 5
+
+        self._position_text = (30, 30)
         self._font_text = cv2.FONT_HERSHEY_DUPLEX
 
         self._title = ''
@@ -36,15 +40,20 @@ class Main:
             pass
 
     def _show_image(self, image, label, number_frame):
-        out = '{}/{}.png'.format(self._dataset_out_exam, number_frame)
-
-        cv2.putText(image, label, self._position_text, self._font_text, 1, self._color_circle)
+        cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._font_color)
 
         cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
         cv2.imshow('Analysis', image)
         cv2.waitKey(1)
+        self._save_image(image, number_frame)
 
+    def _save_image(self, image, number_frame, title=''):
+        if title == '':
+            out = '{}/{}.png'.format(self._dataset_out_exam, number_frame)
+        else:
+            out = '{}/{}_{}.png'.format(self._dataset_out_exam, title, number_frame)
         cv2.imwrite(out, image)
+
 
     @staticmethod
     def _pre_process(frame):
@@ -73,12 +82,15 @@ class Main:
 
             img_process = self._pre_process(original)
 
-            center, radius = self._pupil.pupil_detect(img_process)
+            center, radius, points, binary = self._pupil.pupil_detect(img_process)
+            self._save_image(binary, number_frame, 'binary')
 
-            cv2.circle(original, (center[0], center[1]), 20, (255, 255, 255), 2)
+            for point in points:
+                cv2.circle(original, (point[0], point[1]), self._size_point_pupil, self._point_color, 2)
 
-            # presentation = cv2.hconcat([eye_img, filter_eye, threshold])
-            label = 'Frame = %d, Radius = %d, Center = (%d, %d)' % (number_frame, radius, center[0], center[1])
+            cv2.circle(original, (center[0], center[1]), radius, self._pupil_color, 3)
+
+            label = 'Frame=%d;Radius=%d;Center=(%d,%d)' % (number_frame, radius, center[0], center[1])
             self._show_image(original, label, number_frame)
 
             self._add_label("{},{},{}".format(number_frame, center[0], center[1]))
