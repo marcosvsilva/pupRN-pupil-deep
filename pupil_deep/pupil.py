@@ -5,67 +5,82 @@ from pupil_deep import PupilDeep
 
 class Pupil:
     def __init__(self):
+        #params
         self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
 
         self._pupul_deep = PupilDeep()
 
-        #Params
-        self._image = []
         self._default_color = 0
-        self._range_eye = 0
-        self._center = []
-        self._shape = []
+        self._thresh_binary = 30
+        self._threshold_binary = 255
+        self._radius_range = range(35, 100, 1)
+        self._pupil_color_range = range(0, 170, 1)
+        self._new_color_pupil = 20
 
     def pupil_detect(self, image):
-        self._image = image
+        original = np.copy(image)
 
-        self._center = self._pupul_deep.run(image)
+        center = self._pupul_deep.run(image)
 
-        self._image = self._binarize()
+        binary = self._binarize(image)
 
-        self._default_color = self._image[self._center[0], self._center[1]]
+        self._default_color = binary[center[0], center[1]]
 
-        self._shape = image.shape
+        points, radius = self._radius(binary, center)
 
-        points, radius = self._radius()
+        if int(radius) not in self._radius_range:
+            new_image = self._mask_reflex(original, binary, center)
+            self.pupil_detect(new_image)
 
-        return self._center, int(radius), points, self._image
+        return center, int(radius), points, binary
 
-    def _close_img(self, image, size_kernel):
+    def _mask_reflex(self, image, binary, center):
+        i, j = center
+        x, y = image.shape
+        new_image = np.copy(image)
+        if binary[i, j] not in self._pupil_color_range:
+            new_image[i, j] = self._new_color_pupil
+
+            if (0 < i < y) and (0 < j < x):
+                for orientation in self._orientations:
+                    new_image = self._mask_reflex(new_image, binary, self._calc_coordinates(orientation, center))
+        else:
+            new_image = image
+
+        return new_image
+
+    @staticmethod
+    def _close_img(image, size_kernel):
         kernel = np.ones((size_kernel, size_kernel), np.uint8)
         erode = cv2.erode(image, kernel=kernel, iterations=1)
         return cv2.dilate(erode, kernel=kernel, iterations=1)
 
-    def _binarize(self):
-        threshold = cv2.adaptiveThreshold(self._image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-        threshold = self._close_img(threshold, 5)
-        threshold = self._close_img(threshold, 7)
-        threshold = self._close_img(threshold, 10)
-        return threshold
+    def _binarize(self, image):
+        return cv2.threshold(image, self._thresh_binary, self._threshold_binary, cv2.THRESH_BINARY)[1]
 
-    def _radius(self):
-        radius = np.array([])
-        points = []
+    def _radius(self, image, center):
+        radius, points = np.array([]), []
         for orientation in self._orientations:
-            point = self._search_edge(orientation)
+            point = self._search_edge(image, center, orientation)
             points.append(point)
-            radius = np.append(radius, self._calc_radius(point))
+            radius = np.append(radius, self._calc_radius(center, point))
 
         radius.sort()
         radius = radius[2:6:1]
         return points, radius.mean()
 
-    def _calc_radius(self, points):
-        if self._center[0] != points[0]:
-            return abs(self._center[0] - points[0])
+    @staticmethod
+    def _calc_radius(center, points):
+        if center[0] != points[0]:
+            return abs(center[0] - points[0])
         else:
-            return abs(self._center[1] - points[1])
+            return abs(center[1] - points[1])
 
-    def _search_edge(self, orientation):
-        i, j = self._center
-        while 0 <= i < self._shape[0] and 0 <= j < self._shape[1]:
-            # if (self._image[i, j] not in self._range_eye) and (self._image[i, j] not in self._white_range):
-            if self._image[i, j] != self._default_color:
+    def _search_edge(self, image, center, orientation):
+        i, j = center
+        x, y = image.shape
+        while 0 <= i < y and 0 <= j < x:
+            if image[j, i] != self._default_color:
                 break
             else:
                 i, j = self._calc_coordinates(orientation, (i, j))
