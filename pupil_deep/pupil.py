@@ -16,6 +16,7 @@ class Pupil:
         self._radius_range = range(35, 100, 1)
         self._pupil_color_range = range(0, 170, 1)
         self._new_color_pupil = 20
+        self._range_search_reflex = 30
 
     def pupil_detect(self, image):
         original = np.copy(image)
@@ -29,25 +30,26 @@ class Pupil:
         points, radius = self._radius(binary, center)
 
         if int(radius) not in self._radius_range:
-            new_image = self._mask_reflex(original, binary, center)
-            self.pupil_detect(new_image)
+            binary = self._mask_reflex(original, binary, center, center)
+            #self.pupil_detect(new_image)
 
         return center, int(radius), points, binary
 
-    def _mask_reflex(self, image, binary, center):
-        i, j = center
-        x, y = image.shape
+    def _mask_reflex(self, image, binary, center, position):
         new_image = np.copy(image)
-        if binary[i, j] not in self._pupil_color_range:
-            new_image[i, j] = self._new_color_pupil
 
-            if (0 < i < y) and (0 < j < x):
-                for orientation in self._orientations:
-                    new_image = self._mask_reflex(new_image, binary, self._calc_coordinates(orientation, center))
-        else:
-            new_image = image
+        if abs(position[0] - center[0]) > self._range_search_reflex:
+            return new_image
 
-        return new_image
+        if abs(position[1] - center[1]) > self._range_search_reflex:
+            return new_image
+
+        i, j = position
+        for orientation in self._orientations:
+            if binary[j, i] != 0:
+                new_image[j, i] = self._new_color_pupil
+
+            new_image = self._mask_reflex(new_image, binary, center, self._calc_coordinates(orientation, position))
 
     @staticmethod
     def _close_img(image, size_kernel):
@@ -107,11 +109,11 @@ class Pupil:
     def _inc_coordinates(orientation, position):
         i, j = position[0], position[1]
         if orientation == 'south':
-            i -= 1
-        elif orientation == 'north':
             i += 1
+        elif orientation == 'north':
+            i -= 1
         elif orientation == 'east':
-            j += 1
-        elif orientation == 'west':
             j -= 1
+        elif orientation == 'west':
+            j += 1
         return i, j
