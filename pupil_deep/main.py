@@ -7,13 +7,16 @@ from pupil import Pupil
 class Main:
     def __init__(self):
         # Params
+        self._frame_stop = 10
+        self._movie_stop = 1
+
         self.dataset_path = 'eye_test/movies'
         self.dataset_out = 'eye_test/out'
         self.dataset_label = 'eye_test/label'
 
-        self._pupil_color = (255, 255, 0)
-        self._point_color = (170, 170, 0)
-        self._font_color = (255, 255, 0)
+        self._white_color = (255, 255, 0)
+        self._gray_color = (170, 170, 0)
+        self._black_color = (0, 0, 0)
 
         self._size_point_pupil = 5
 
@@ -40,7 +43,7 @@ class Main:
             pass
 
     def _show_image(self, image, label, number_frame):
-        cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._font_color)
+        cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._white_color)
 
         cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
         cv2.imshow('Analysis', image)
@@ -53,7 +56,6 @@ class Main:
         else:
             out = '{}/{}_{}.png'.format(self._dataset_out_exam, title, number_frame)
         cv2.imwrite(out, image)
-
 
     @staticmethod
     def _pre_process(frame):
@@ -69,29 +71,44 @@ class Main:
         erode = cv2.erode(median, kernel=kernel, iterations=1)
         return cv2.dilate(erode, kernel=kernel, iterations=1)
 
+    def _mark_center(self, image, center):
+        if image[center[1], center[0]] == 0:
+            cv2.line(image, (center[0] - 10, center[1]), (center[0] + 10, center[1]), self._black_color, 1)
+            cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), self._black_color, 1)
+        else:
+            cv2.line(image, (center[0] - 10, center[1]), (center[0] + 10, center[1]), self._white_color, 1)
+            cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), self._white_color, 1)
+        return image
+
+    def _draw_circles(self, image, points):
+        for point in points:
+            cv2.circle(image, (point[0], point[1]), self._size_point_pupil, self._gray_color, 2)
+
+        return image
+
     def _pupil_process(self, exam):
         number_frame = 0
 
         while True:
             _, frame = exam.read()
 
-            if frame is None:
-                break
+            if (frame is None) or (number_frame >= self._frame_stop):
+                pass
 
             original = np.copy(frame)
 
             img_process = self._pre_process(original)
 
             center, radius, points, binary = self._pupil.pupil_detect(img_process)
+            binary = self._mark_center(binary, center)
             self._save_image(binary, number_frame, 'binary')
 
-            for point in points:
-                cv2.circle(original, (point[0], point[1]), self._size_point_pupil, self._point_color, 2)
-
-            cv2.circle(original, (center[0], center[1]), radius, self._pupil_color, 3)
+            img_process = self._mark_center(img_process, center)
+            img_process = self._draw_circles(img_process, points)
+            cv2.circle(img_process, (center[0], center[1]), radius, self._white_color, 3)
 
             label = 'Frame=%d;Radius=%d;Center=(%d,%d)' % (number_frame, radius, center[0], center[1])
-            self._show_image(original, label, number_frame)
+            self._show_image(img_process, label, number_frame)
 
             self._add_label("{},{},{}".format(number_frame, center[0], center[1]))
 
@@ -102,15 +119,26 @@ class Main:
 
     def run(self):
         files = os.listdir(self.dataset_path)
+
+        number_movie = 0
+
         for file in files:
+            if number_movie >= self._movie_stop:
+                break
+
             self._title = file.replace('.mp4', '')
             self._dataset_out_exam = '{}/{}'.format(self.dataset_out, self._title)
+
+            if self._title != '07080407_08_2019_09_33_39':
+                pass
 
             self._add_label('frame,x,y')
             self._make_path()
 
             exam = cv2.VideoCapture('{}/{}'.format(self.dataset_path, file))
             self._pupil_process(exam)
+
+            number_movie += 1
 
 
 main = Main()
