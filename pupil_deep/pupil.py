@@ -15,8 +15,8 @@ class Pupil:
         self._threshold_binary = 255
         self._radius_range = range(35, 100, 1)
         self._pupil_color_range = range(0, 170, 1)
-        self._new_color_pupil = 20
-        self._range_search_reflex = 30
+        self._new_color_pupil = 10
+        self._range_search_reflex = 40
 
     def pupil_detect(self, image):
         original = np.copy(image)
@@ -30,26 +30,22 @@ class Pupil:
         points, radius = self._radius(binary, center)
 
         if int(radius) not in self._radius_range:
-            binary = self._mask_reflex(original, binary, center, center)
-            #self.pupil_detect(new_image)
+            new_image = self._mask_reflex(original, binary, center)
+            binary = self._binarize(new_image)
+            #return self.pupil_detect(new_image)
 
         return center, int(radius), points, binary
 
-    def _mask_reflex(self, image, binary, center, position):
+    def _mask_reflex(self, image, binary, center):
         new_image = np.copy(image)
 
-        if abs(position[0] - center[0]) > self._range_search_reflex:
-            return new_image
+        i, j = center
+        for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
+            for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
+                if binary[y, x] != 0:
+                    new_image[y, x] = self._new_color_pupil
 
-        if abs(position[1] - center[1]) > self._range_search_reflex:
-            return new_image
-
-        i, j = position
-        for orientation in self._orientations:
-            if binary[j, i] != 0:
-                new_image[j, i] = self._new_color_pupil
-
-            new_image = self._mask_reflex(new_image, binary, center, self._calc_coordinates(orientation, position))
+        return new_image
 
     @staticmethod
     def _close_img(image, size_kernel):
