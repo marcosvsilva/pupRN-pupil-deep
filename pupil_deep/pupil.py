@@ -6,7 +6,8 @@ from pupil_deep import PupilDeep
 class Pupil:
     def __init__(self):
         #params
-        self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        #self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        self._orientations = ['southeast']
 
         self._pupul_deep = PupilDeep()
 
@@ -25,14 +26,13 @@ class Pupil:
 
         binary = self._binarize(image)
 
-        self._default_color = binary[center[0], center[1]]
+        self._default_color = binary[center[1], center[0]]
 
         points, radius = self._radius(binary, center)
 
         if int(radius) not in self._radius_range:
             new_image = self._mask_reflex(original, binary, center)
-            binary = self._binarize(new_image)
-            #return self.pupil_detect(new_image)
+            return self.pupil_detect(new_image)
 
         return center, int(radius), points, binary
 
@@ -63,9 +63,10 @@ class Pupil:
             points.append(point)
             radius = np.append(radius, self._calc_radius(center, point))
 
-        radius.sort()
-        radius = radius[2:6:1]
-        return points, radius.mean()
+        #radius.sort()
+        #radius = radius[2:6:1]
+        #return points, radius.mean()
+        return points, radius[0]
 
     @staticmethod
     def _calc_radius(center, points):
@@ -105,11 +106,11 @@ class Pupil:
     def _inc_coordinates(orientation, position):
         i, j = position[0], position[1]
         if orientation == 'south':
-            i += 1
-        elif orientation == 'north':
-            i -= 1
-        elif orientation == 'east':
-            j -= 1
-        elif orientation == 'west':
             j += 1
+        elif orientation == 'north':
+            j -= 1
+        elif orientation == 'east':
+            i += 1
+        elif orientation == 'west':
+            i -= 1
         return i, j
