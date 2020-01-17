@@ -7,7 +7,7 @@ from pupil import Pupil
 class Main:
     def __init__(self):
         # Params
-        self._frame_stop = 70
+        self._frame_stop = 20
         self._movie_stop = 1
 
         self.dataset_path = 'eye_test/movies'
