@@ -6,13 +6,14 @@ from pupil_deep import PupilDeep
 class Pupil:
     def __init__(self):
         #params
-        #self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
-        self._orientations = ['southeast']
+        self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        #self._orientations = ['southeast']
 
         self._pupul_deep = PupilDeep()
 
         self._default_color = 0
-        self._thresh_binary = 30
+        #self._thresh_binary = 30
+        self._thresh_binary = 90
         self._threshold_binary = 255
         self._radius_range = range(35, 100, 1)
         self._pupil_color_range = range(0, 170, 1)
@@ -31,8 +32,9 @@ class Pupil:
         points, radius = self._radius(binary, center)
 
         if int(radius) not in self._radius_range:
-            new_image = self._mask_reflex(original, binary, center)
-            return self.pupil_detect(new_image)
+            pass
+            #new_image = self._mask_reflex(original, binary, center)
+            #return self.pupil_detect(new_image)
 
         return center, int(radius), points, binary
 
