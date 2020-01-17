@@ -7,7 +7,7 @@ from pupil import Pupil
 class Main:
     def __init__(self):
         # Params
-        self._frame_stop = 10
+        self._frame_stop = 70
         self._movie_stop = 1
 
         self.dataset_path = 'eye_test/movies'
@@ -17,6 +17,7 @@ class Main:
         self._white_color = (255, 255, 0)
         self._gray_color = (170, 170, 0)
         self._black_color = (0, 0, 0)
+        self._black_color_range = range(0, 150, 1)
 
         self._size_point_pupil = 5
 
@@ -72,12 +73,10 @@ class Main:
         return cv2.dilate(erode, kernel=kernel, iterations=1)
 
     def _mark_center(self, image, center):
-        if image[center[1], center[0]] == 0:
-            cv2.line(image, (center[0] - 10, center[1]), (center[0] + 10, center[1]), self._black_color, 1)
-            cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), self._black_color, 1)
-        else:
-            cv2.line(image, (center[0] - 10, center[1]), (center[0] + 10, center[1]), self._white_color, 1)
-            cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), self._white_color, 1)
+        #color = self._black_color if image[center[0], center[1]] in self._black_color_range else self._white_color
+        color = self._white_color
+        cv2.line(image, (center[0] - 10, center[1]), (center[0] + 10, center[1]), color, 1)
+        cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), color, 1)
         return image
 
     def _draw_circles(self, image, points):
@@ -93,7 +92,7 @@ class Main:
             _, frame = exam.read()
 
             if (frame is None) or (number_frame >= self._frame_stop):
-                pass
+                break
 
             original = np.copy(frame)
 
@@ -124,7 +123,7 @@ class Main:
 
         for file in files:
             if number_movie >= self._movie_stop:
-                break
+                pass
 
             self._title = file.replace('.mp4', '')
             self._dataset_out_exam = '{}/{}'.format(self.dataset_out, self._title)
