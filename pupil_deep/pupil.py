@@ -6,21 +6,20 @@ from pupil_deep import PupilDeep
 class Pupil:
     def __init__(self):
         #params
-        self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
-        #self._orientations = ['southeast']
+        #self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        self._orientations = ['southeast']
 
         self._pupul_deep = PupilDeep()
 
         self._default_color = 0
-        #self._thresh_binary = 30
-        self._thresh_binary = 90
+        self._thresh_binary = 25
         self._threshold_binary = 255
         self._radius_range = range(35, 100, 1)
         self._pupil_color_range = range(0, 170, 1)
         self._new_color_pupil = 10
         self._range_search_reflex = 40
 
-    def pupil_detect(self, image):
+    def pupil_detect(self, image, number_cal=1):
         original = np.copy(image)
 
         center = self._pupul_deep.run(image)
@@ -32,9 +31,9 @@ class Pupil:
         points, radius = self._radius(binary, center)
 
         if int(radius) not in self._radius_range:
-            pass
-            #new_image = self._mask_reflex(original, binary, center)
-            #return self.pupil_detect(new_image)
+            if number_cal <= 5:
+                new_image = self._mask_reflex(original, binary, center)
+                return self.pupil_detect(new_image, number_cal + 1)
 
         return center, int(radius), points, binary
 
@@ -72,10 +71,7 @@ class Pupil:
 
     @staticmethod
     def _calc_radius(center, points):
-        if center[0] != points[0]:
-            return abs(center[0] - points[0])
-        else:
-            return abs(center[1] - points[1])
+        return int((((center[0]-points[0]) ** 2) + ((center[1] - points[1]) ** 2)) ** (1/2))
 
     def _search_edge(self, image, center, orientation):
         i, j = center
