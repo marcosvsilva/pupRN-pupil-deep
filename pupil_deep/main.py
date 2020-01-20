@@ -7,7 +7,7 @@ from pupil import Pupil
 class Main:
     def __init__(self):
         # Params
-        self._frame_stop = 20
+        self._frame_stop = 0
         self._movie_stop = 1
 
         self.dataset_path = 'eye_test/movies'
@@ -73,7 +73,6 @@ class Main:
         return cv2.dilate(erode, kernel=kernel, iterations=1)
 
     def _mark_center(self, image, center):
-        #color = self._black_color if image[center[0], center[1]] in self._black_color_range else self._white_color
         color = self._white_color
         cv2.line(image, (center[0] - 10, center[1]), (center[0] + 10, center[1]), color, 1)
         cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), color, 1)
@@ -91,7 +90,7 @@ class Main:
         while True:
             _, frame = exam.read()
 
-            if (frame is None) or (number_frame >= self._frame_stop):
+            if (frame is None) or ((self._frame_stop > 0) and (number_frame >= self._frame_stop)):
                 break
 
             original = np.copy(frame)
@@ -109,7 +108,7 @@ class Main:
             label = 'Frame=%d;Radius=%d;Center=(%d,%d)' % (number_frame, radius, center[0], center[1])
             self._show_image(img_process, label, number_frame)
 
-            self._add_label("{},{},{}".format(number_frame, center[0], center[1]))
+            self._add_label("{},{},{},{}".format(number_frame, center[0], center[1], radius))
 
             number_frame += 1
 
@@ -131,7 +130,7 @@ class Main:
             if self._title != '07080407_08_2019_09_33_39':
                 pass
 
-            self._add_label('frame,x,y')
+            self._add_label('frame,center_x,center_y,radius')
             self._make_path()
 
             exam = cv2.VideoCapture('{}/{}'.format(self.dataset_path, file))
