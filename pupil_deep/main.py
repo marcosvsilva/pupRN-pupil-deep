@@ -20,10 +20,11 @@ class Main:
         self.dataset_out = 'eye_test/out'
         self.dataset_label = 'eye_test/label'
 
-        # Params
-        self._frame_stop = 0
+        # Stops
+        self._frame_stop = 291
         self._movie_stop = 1
 
+        # Params
         self._white_color = (255, 255, 0)
         self._gray_color = (170, 170, 0)
         self._black_color = (0, 0, 0)
@@ -51,6 +52,7 @@ class Main:
 
     def _show_image(self, image, label, number_frame):
         cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._white_color)
+        #cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._black_color)
 
         cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
         cv2.imshow('Analysis', image)
@@ -110,7 +112,7 @@ class Main:
             binary = self._mark_center(binary, center)
             self._save_image(binary, number_frame, 'binary')
 
-            left, right, distance, binary = self._eye.eye_detect(img_process, center)
+            left, right, eye, binary = self._eye.eye_detect(img_process, center)
             binary = self._mark_eye(binary, left, right)
             self._save_image(binary, number_frame, 'binary_eye')
 
@@ -118,10 +120,13 @@ class Main:
             img_process = self._draw_circles(img_process, points)
             cv2.circle(img_process, (center[0], center[1]), radius, self._white_color, 3)
 
-            label = 'Frame=%d;Radius=%d;Center=(%d,%d)' % (number_frame, radius, center[0], center[1])
+            label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (number_frame, radius, center[0], center[1], eye)
             self._show_image(img_process, label, number_frame)
 
-            self._add_label("{},{},{},{}".format(number_frame, center[0], center[1], radius))
+            #label = 'Size=%d' % size
+            #self._show_image(binary, label, number_frame)
+
+            self._add_label("{},{},{},{},{}".format(number_frame, center[0], center[1], radius, eye))
 
             number_frame += 1
 
@@ -143,7 +148,7 @@ class Main:
             if self._title != '07080407_08_2019_09_33_39':
                 pass
 
-            self._add_label('frame,center_x,center_y,radius')
+            self._add_label('frame,center_x,center_y,radius,eye_size')
             self._make_path()
 
             exam = cv2.VideoCapture('{}/{}'.format(self.dataset_path, file))
