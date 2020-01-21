@@ -2,17 +2,27 @@ import cv2
 import os
 import numpy as np
 from pupil import Pupil
+from eye import Eye
 
 
 class Main:
     def __init__(self):
-        # Params
-        self._frame_stop = 0
-        self._movie_stop = 1
+        # Variables
+        self._title = ''
+        self._dataset_out_exam = ''
 
+        # Dependences
+        self._pupil = Pupil()
+        self._eye = Eye()
+
+        # Directories
         self.dataset_path = 'eye_test/movies'
         self.dataset_out = 'eye_test/out'
         self.dataset_label = 'eye_test/label'
+
+        # Params
+        self._frame_stop = 0
+        self._movie_stop = 1
 
         self._white_color = (255, 255, 0)
         self._gray_color = (170, 170, 0)
@@ -24,10 +34,6 @@ class Main:
         self._position_text = (30, 30)
         self._font_text = cv2.FONT_HERSHEY_DUPLEX
 
-        self._title = ''
-        self._dataset_out_exam = ''
-
-        self._pupil = Pupil()
 
     def _add_label(self, information):
         with open('{}/{}_label.csv'.format(self.dataset_label, self._title), 'a', newline='') as file:
@@ -58,8 +64,7 @@ class Main:
             out = '{}/{}_{}.png'.format(self._dataset_out_exam, title, number_frame)
         cv2.imwrite(out, image)
 
-    @staticmethod
-    def _pre_process(frame):
+    def _pre_process(self, frame):
         yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
         yuv[:, :, 0] = cv2.equalizeHist(yuv[:, :, 0])
         bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
@@ -71,6 +76,10 @@ class Main:
         kernel = np.ones((5, 5), np.uint8)
         erode = cv2.erode(median, kernel=kernel, iterations=1)
         return cv2.dilate(erode, kernel=kernel, iterations=1)
+
+    def _mark_eye(self, image, right, left):
+        cv2.line(image, (right[0], right[1]), (left[0], left[1]), self._white_color, 1)
+        return image
 
     def _mark_center(self, image, center):
         color = self._white_color
@@ -101,6 +110,10 @@ class Main:
             binary = self._mark_center(binary, center)
             self._save_image(binary, number_frame, 'binary')
 
+            left, right, distance, binary = self._eye.eye_detect(img_process, center)
+            binary = self._mark_eye(binary, left, right)
+            self._save_image(binary, number_frame, 'binary_eye')
+
             img_process = self._mark_center(img_process, center)
             img_process = self._draw_circles(img_process, points)
             cv2.circle(img_process, (center[0], center[1]), radius, self._white_color, 3)
@@ -112,8 +125,8 @@ class Main:
 
             number_frame += 1
 
+        cv2.destroyAllWindows()
         exam.release()
-        cv2.destroyAllWindows
 
     def run(self):
         files = os.listdir(self.dataset_path)
