@@ -6,9 +6,10 @@ class Eye:
         # Variables
         self._center = []
         self._default_color = 0
+        self._shape = []
 
         # Params
-        self._thresh_binary = 90
+        self._thresh_binary = 50
         self._threshold_binary = 255
         self._distance_range = range(50, 200, 1)
 
@@ -17,28 +18,36 @@ class Eye:
 
     def _eye_edge_up(self, image, position, orientation):
         i, j = position
-        if image[j, i] == self._default_color:
-            i -= 1 if orientation == 'left' else - 1
-            border = self._eye_edge_up(image, [i, j], orientation)
-        else:
-            if image[j + 1, i] == self._default_color:
-                border = self._eye_edge_up(image, [i, j + 1], orientation)
-                print('entrou')
+        if (0 <= i < self._shape[0]) and (0 <= j < self._shape[1]):
+            if image[j, i] == self._default_color:
+                i -= 1 if orientation == 'left' else - 1
+                border = self._eye_edge_up(image, [i, j], orientation)
             else:
-                border = [i, j]
+                v = i + 1 if orientation == 'left' else i - 1
+                if image[j + 1, v] == self._default_color:
+                    border = self._eye_edge_up(image, [i, j + 1], orientation)
+
+                else:
+                    border = [i, j]
+        else:
+            border = [i, j]
 
         return border
 
     def _eye_edge_down(self, image, position, orientation):
         i, j = position
-        if image[j, i] == self._default_color:
-            i -= 1 if orientation == 'left' else - 1
-            border = self._eye_edge_down(image, [i, j], orientation)
-        else:
-            if image[j - 1, i] == self._default_color:
-                border = self._eye_edge_down(image, [i, j - 1], orientation)
+        if (0 <= i < self._shape[0]) and (0 <= j < self._shape[1]):
+            if image[j, i] == self._default_color:
+                i -= 1 if orientation == 'left' else - 1
+                border = self._eye_edge_down(image, [i, j], orientation)
             else:
-                border = [i, j]
+                v = i + 1 if orientation == 'left' else i - 1
+                if image[j - 1, v] == self._default_color:
+                    border = self._eye_edge_down(image, [i, j - 1], orientation)
+                else:
+                    border = [i, j]
+        else:
+            border = [i, j]
 
         return border
 
@@ -47,6 +56,7 @@ class Eye:
 
     def eye_detect(self, image, center):
         self._center = center
+        self._shape = image.shape
 
         binary = self._binarize(image)
 
