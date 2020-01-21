@@ -5,13 +5,18 @@ from pupil_deep import PupilDeep
 
 class Pupil:
     def __init__(self):
-        #params
+        # Orientations
         #self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
         self._orientations = ['southeast']
 
+        # Variables
+        self._center = []
+        self._default_color = 0
+
+        # Dependences
         self._pupul_deep = PupilDeep()
 
-        self._default_color = 0
+        # Params
         self._thresh_binary = 25
         self._threshold_binary = 255
         self._radius_range = range(35, 100, 1)
@@ -19,28 +24,10 @@ class Pupil:
         self._new_color_pupil = 10
         self._range_search_reflex = 40
 
-    def pupil_detect(self, image, number_cal=1):
-        original = np.copy(image)
-
-        center = self._pupul_deep.run(image)
-
-        binary = self._binarize(image)
-
-        self._default_color = binary[center[1], center[0]]
-
-        points, radius = self._radius(binary, center)
-
-        if int(radius) not in self._radius_range:
-            if number_cal <= 5:
-                new_image = self._mask_reflex(original, binary, center)
-                return self.pupil_detect(new_image, number_cal + 1)
-
-        return center, int(radius), points, binary
-
-    def _mask_reflex(self, image, binary, center):
+    def _mask_reflex(self, image, binary):
         new_image = np.copy(image)
 
-        i, j = center
+        i, j = self._center
         for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
             for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
                 if binary[y, x] != 0:
@@ -48,33 +35,23 @@ class Pupil:
 
         return new_image
 
-    @staticmethod
-    def _close_img(image, size_kernel):
-        kernel = np.ones((size_kernel, size_kernel), np.uint8)
-        erode = cv2.erode(image, kernel=kernel, iterations=1)
-        return cv2.dilate(erode, kernel=kernel, iterations=1)
-
     def _binarize(self, image):
         return cv2.threshold(image, self._thresh_binary, self._threshold_binary, cv2.THRESH_BINARY)[1]
 
-    def _radius(self, image, center):
+    def _calc_radius(self, image):
         radius, points = np.array([]), []
         for orientation in self._orientations:
-            point = self._search_edge(image, center, orientation)
+            point = self._search_edge(image, orientation)
             points.append(point)
-            radius = np.append(radius, self._calc_radius(center, point))
+            radius = np.append(radius, self._calc_distance(point))
 
-        #radius.sort()
-        #radius = radius[2:6:1]
-        #return points, radius.mean()
         return points, radius[0]
 
-    @staticmethod
-    def _calc_radius(center, points):
-        return int((((center[0]-points[0]) ** 2) + ((center[1] - points[1]) ** 2)) ** (1/2))
+    def _calc_distance(self, points):
+        return int((((self._center[0]-points[0]) ** 2) + ((self._center[1] - points[1]) ** 2)) ** (1/2))
 
-    def _search_edge(self, image, center, orientation):
-        i, j = center
+    def _search_edge(self, image, orientation):
+        i, j = self._center
         x, y = image.shape
         while 0 <= i < y and 0 <= j < x:
             if image[j, i] != self._default_color:
@@ -100,8 +77,7 @@ class Pupil:
             position = self._inc_coordinates(orientation, position)
         return position
 
-    @staticmethod
-    def _inc_coordinates(orientation, position):
+    def _inc_coordinates(self, orientation, position):
         i, j = position[0], position[1]
         if orientation == 'south':
             j += 1
@@ -112,3 +88,21 @@ class Pupil:
         elif orientation == 'west':
             i -= 1
         return i, j
+
+    def pupil_detect(self, image, number_cal=1):
+        original = np.copy(image)
+
+        self._center = self._pupul_deep.run(image)
+
+        binary = self._binarize(image)
+
+        self._default_color = binary[self._center[1], self._center[0]]
+
+        points, radius = self._calc_radius(binary)
+
+        if int(radius) not in self._radius_range:
+            if number_cal <= 5:
+                new_image = self._mask_reflex(original, binary)
+                return self.pupil_detect(new_image, number_cal + 1)
+
+        return self._center, int(radius), points, binary
