@@ -150,7 +150,6 @@ class Network:
 
 
 class PupilDeep:
-
     def __init__(self, deep=2, layers=16, model='models/default.ckpt'):
         self.sess = tf.Session()
 
@@ -232,7 +231,6 @@ class PupilDeep:
         return self.blob_location(prob_mask)
 
     def restart_tracker(self):
-
         tf.reset_default_graph()
         # plt.close('all')
         self.sess.close()
