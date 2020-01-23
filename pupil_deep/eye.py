@@ -18,7 +18,7 @@ class Eye:
 
     def _eye_edge_up(self, image, position, orientation):
         i, j = position
-        if (0 <= i < self._shape[0]) and (0 <= j < self._shape[1]):
+        if (0 <= j < self._shape[0] - 1) and (0 <= i < self._shape[1] - 1):
             if image[j, i] == self._default_color:
                 i -= 1 if orientation == 'left' else - 1
                 border = self._eye_edge_up(image, [i, j], orientation)
