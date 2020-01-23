@@ -6,7 +6,7 @@ from pupil_deep import PupilDeep
 class Pupil:
     def __init__(self):
         # Orientations
-        #self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        # self.orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
         self._orientations = ['southeast']
 
         # Variables
