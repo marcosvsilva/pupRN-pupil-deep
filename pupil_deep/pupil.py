@@ -30,8 +30,9 @@ class Pupil:
         i, j = self._center
         for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
             for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
-                if binary[y, x] != 0:
-                    new_image[y, x] = self._new_color_pupil
+                if (0 <= y < image.shape[0] - 1) and (0 <= x < image.shape[1] - 1):
+                    if binary[y, x] != 0:
+                        new_image[y, x] = self._new_color_pupil
 
         return new_image
 
