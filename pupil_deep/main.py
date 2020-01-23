@@ -16,9 +16,11 @@ class Main:
         self._eye = Eye()
 
         # Directories
-        self.dataset_path = 'eye_test/movies'
-        self.dataset_out = 'eye_test/out'
-        self.dataset_label = 'eye_test/label'
+        self._dataset_path = 'eye_test/movies'
+        self._dataset_out = 'eye_test/out'
+        self._dataset_label = 'eye_test/label'
+        # self._focus_exam = '07080407_08_2019_09_33_39'
+        self._focus_exam = ''
 
         # Stops
         self._frame_stop = 291
@@ -37,7 +39,7 @@ class Main:
 
 
     def _add_label(self, information):
-        with open('{}/{}_label.csv'.format(self.dataset_label, self._title), 'a', newline='') as file:
+        with open('{}/{}_label.csv'.format(self._dataset_label, self._title), 'a', newline='') as file:
             file.write('{}\n'.format(information))
             file.close()
 
@@ -134,7 +136,7 @@ class Main:
         exam.release()
 
     def run(self):
-        files = os.listdir(self.dataset_path)
+        files = os.listdir(self._dataset_path)
 
         number_movie = 0
 
@@ -143,15 +145,15 @@ class Main:
                 pass
 
             self._title = file.replace('.mp4', '')
-            self._dataset_out_exam = '{}/{}'.format(self.dataset_out, self._title)
+            self._dataset_out_exam = '{}/{}'.format(self._dataset_out, self._title)
 
-            if self._title != '07080407_08_2019_09_33_39':
-                pass
+            if (self._focus_exam != '') and (self._title != self._focus_exam):
+                break
 
             self._add_label('frame,center_x,center_y,radius,eye_size')
             self._make_path()
 
-            exam = cv2.VideoCapture('{}/{}'.format(self.dataset_path, file))
+            exam = cv2.VideoCapture('{}/{}'.format(self._dataset_path, file))
             self._pupil_process(exam)
 
             number_movie += 1
