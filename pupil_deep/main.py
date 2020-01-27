@@ -64,9 +64,9 @@ class Main:
         except FileExistsError:
             pass
 
-    def _show_image(self, image, label, number_frame):
-        cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._white_color)
-        #cv2.putText(image, label, self._position_text, self._font_text, 0.9, self._black_color)
+    def _show_image(self, image, label, number_frame, color=None):
+        paint = self._white_color if color is None else color
+        cv2.putText(image, label, self._position_text, self._font_text, 0.9, paint)
 
         cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
         cv2.imshow('Analysis', image)
@@ -103,9 +103,11 @@ class Main:
         cv2.line(image, (center[0], center[1] - 10), (center[0], center[1] + 10), color, 1)
         return image
 
-    def _draw_circles(self, image, points):
+    def _draw_circles(self, image, points, radius=0, color=None):
         for point in points:
-            cv2.circle(image, (point[0], point[1]), self._size_point_pupil, self._gray_color, 2)
+            rad = radius if radius > 0 else self._size_point_pupil
+            paint = self._gray_color if color is None else color
+            cv2.circle(image, (point[0], point[1]), rad, paint, 2)
 
         return image
 
@@ -132,13 +134,11 @@ class Main:
 
             img_process = self._mark_center(img_process, center)
             img_process = self._draw_circles(img_process, points)
-            cv2.circle(img_process, (center[0], center[1]), radius, self._white_color, 3)
+            img_process = self._draw_circles(img_process, [(center[0], center[1])], radius, self._white_color)
+            img_process = self._draw_circles(img_process, [left, right])
 
             label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (number_frame, radius, center[0], center[1], eye)
             self._show_image(img_process, label, number_frame)
-
-            #label = 'Size=%d' % size
-            #self._show_image(binary, label, number_frame)
 
             self._add_label("{},{},{},{},{}".format(number_frame, center[0], center[1], radius, eye))
 
