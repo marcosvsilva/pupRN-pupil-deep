@@ -19,13 +19,13 @@ class Main:
         self._dataset_path = 'eye_test/movies'
         self._dataset_out = 'eye_test/out'
         self._dataset_label = 'eye_test/label'
-        # self._focus_exam = '07080407_08_2019_09_33_39'
-        self._focus_exam = ''
 
         # Stops
         self._frame_stop = 0
         self._movie_stop = 0
         self._list_not_available = []
+        self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12',
+                            '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
 
         # Params
         self._white_color = (255, 255, 0)
@@ -57,9 +57,9 @@ class Main:
         paint = self._white_color if color is None else color
         cv2.putText(image, label, self._position_text, self._font_text, 0.9, paint)
 
-        cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-        cv2.imshow('Analysis', image)
-        cv2.waitKey(1)
+        #cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
+        #cv2.imshow('Analysis', image)
+        #cv2.waitKey(1)
         self._save_image(image, number_frame)
 
     def _save_image(self, image, number_frame, title=''):
@@ -148,8 +148,8 @@ class Main:
             self._title = file.replace('.mp4', '')
             self._dataset_out_exam = '{}/{}'.format(self._dataset_out, self._title)
 
-            if (self._focus_exam != '') and (self._title != self._focus_exam):
-                break
+            if (len(self._focus_exam) > 0) and (self._title not in self._focus_exam):
+                continue
 
             if self._title in self._list_not_available:
                 continue
