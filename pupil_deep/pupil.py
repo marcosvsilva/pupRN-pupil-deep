@@ -1,17 +1,19 @@
 import numpy as np
 import cv2
+import pandas as pd
 from pupil_deep import PupilDeep
 
 
 class Pupil:
     def __init__(self):
         # Orientations
-        # self.orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
-        self._orientations = ['southeast']
+        self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        # self._orientations = ['southeast']
 
         # Variables
         self._center = []
         self._default_color = 0
+        self._number_of_points_variable_radius = 3
 
         # Dependences
         self._pupul_deep = PupilDeep()
@@ -42,14 +44,30 @@ class Pupil:
     def _calc_radius(self, image):
         radius, points = np.array([]), []
         for orientation in self._orientations:
-            point = self._search_edge(image, orientation)
-            points.append(point)
-            radius = np.append(radius, self._calc_distance(point))
+            points.append(self._search_edge(image, orientation))
 
-        return points, radius[0]
+        return points, self._filter_radius(points)
 
-    def _calc_distance(self, points):
-        return int((((self._center[0]-points[0]) ** 2) + ((self._center[1] - points[1]) ** 2)) ** (1/2))
+    def _filter_radius(self, points):
+        edges = [{'point': x, 'rad': self._calc_distance(x)} for x in points]
+        edges = sorted(edges, key=lambda k: k['rad'])
+        edges = edges[1:len(self._orientations)-1:1]
+        radius = pd.Series([x['rad'] for x in edges])
+        median = radius.median()
+        std = radius.std()
+
+        close = []
+        for rad in edges:
+            dist = abs(rad['rad'] - median)
+            if dist < std:
+                close.append({'rad': rad['rad'], 'distance': dist})
+
+        close = sorted(close, key=lambda k: k['distance'])
+        close = pd.Series(x['rad'] for x in close[0:self._number_of_points_variable_radius:1])
+        return close.mean()
+
+    def _calc_distance(self, point):
+        return int((((self._center[0]-point[0]) ** 2) + ((self._center[1] - point[1]) ** 2)) ** (1/2))
 
     def _search_edge(self, image, orientation):
         i, j = self._center
