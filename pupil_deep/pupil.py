@@ -13,11 +13,7 @@ class Pupil:
         # Variables
         self._center = []
         self._default_color = 0
-<<<<<<< HEAD
         self._number_of_points_variable_radius = 2
-=======
-        self._number_of_points_variable_radius = 3
->>>>>>> dd3e3c7faaf3ff3d2a6ba49456c11065eecabddb
 
         # Dependences
         self._pupul_deep = PupilDeep()
