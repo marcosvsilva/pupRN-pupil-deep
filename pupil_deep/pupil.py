@@ -1,17 +1,19 @@
 import numpy as np
 import cv2
+import pandas as pd
 from pupil_deep import PupilDeep
 
 
 class Pupil:
     def __init__(self):
         # Orientations
-        # self.orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
-        self._orientations = ['southeast']
+        self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+        # self._orientations = ['southeast']
 
         # Variables
         self._center = []
         self._default_color = 0
+        self._number_of_points_variable_radius = 2
 
         # Dependences
         self._pupul_deep = PupilDeep()
@@ -19,19 +21,31 @@ class Pupil:
         # Params
         self._thresh_binary = 25
         self._threshold_binary = 255
-        self._radius_range = range(35, 100, 1)
-        self._pupil_color_range = range(0, 170, 1)
+        self._radius_range = range(35, 90, 1)
+        self._pupil_color_range = range(0, 70, 1)
         self._new_color_pupil = 10
-        self._range_search_reflex = 40
+        self._range_search_reflex = 60
 
-    def _mask_reflex(self, image, binary):
+    # def _treatment_reflex(self, image, binary):
+    #     new_image = np.copy(image)
+    #
+    #     i, j = self._center
+    #     for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
+    #         for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
+    #             if (0 <= y < image.shape[0] - 1) and (0 <= x < image.shape[1] - 1):
+    #                 if binary[y, x] != 0:
+    #                     new_image[y, x] = self._new_color_pupil
+    #
+    #     return new_image
+
+    def _treatment_reflex(self, image, binary):
         new_image = np.copy(image)
 
         i, j = self._center
         for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
             for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
                 if (0 <= y < image.shape[0] - 1) and (0 <= x < image.shape[1] - 1):
-                    if binary[y, x] != 0:
+                    if image[y, x] not in self._pupil_color_range:
                         new_image[y, x] = self._new_color_pupil
 
         return new_image
@@ -42,14 +56,30 @@ class Pupil:
     def _calc_radius(self, image):
         radius, points = np.array([]), []
         for orientation in self._orientations:
-            point = self._search_edge(image, orientation)
-            points.append(point)
-            radius = np.append(radius, self._calc_distance(point))
+            points.append(self._search_edge(image, orientation))
 
-        return points, radius[0]
+        return points, self._filter_radius(points)
 
-    def _calc_distance(self, points):
-        return int((((self._center[0]-points[0]) ** 2) + ((self._center[1] - points[1]) ** 2)) ** (1/2))
+    def _filter_radius(self, points):
+        edges = [{'point': x, 'rad': self._calc_distance(x)} for x in points]
+        edges = sorted(edges, key=lambda k: k['rad'])
+        edges = edges[1:len(self._orientations)-1:1]
+        radius = pd.Series([x['rad'] for x in edges])
+        median = radius.median()
+        std = radius.std()
+
+        close = []
+        for rad in edges:
+            dist = abs(rad['rad'] - median)
+            if dist < std:
+                close.append({'rad': rad['rad'], 'distance': dist})
+
+        close = sorted(close, key=lambda k: k['distance'])
+        close = pd.Series(x['rad'] for x in close[0:self._number_of_points_variable_radius:1])
+        return close.mean()
+
+    def _calc_distance(self, point):
+        return int((((self._center[0]-point[0]) ** 2) + ((self._center[1] - point[1]) ** 2)) ** (1/2))
 
     def _search_edge(self, image, orientation):
         i, j = self._center
@@ -94,16 +124,20 @@ class Pupil:
         original = np.copy(image)
 
         self._center = self._pupul_deep.run(image)
+        binary_pre_process = self._binarize(image)
+        image_process = self._treatment_reflex(original, binary_pre_process)
 
-        binary = self._binarize(image)
+        self._center = self._pupul_deep.run(image_process)
+        binary_process = self._binarize(image_process)
 
-        self._default_color = binary[self._center[1], self._center[0]]
+        self._default_color = binary_process[self._center[1], self._center[0]]
 
-        points, radius = self._calc_radius(binary)
+        points, radius = self._calc_radius(binary_process)
 
         if int(radius) not in self._radius_range:
-            if number_cal <= 5:
-                new_image = self._mask_reflex(original, binary)
-                return self.pupil_detect(new_image, number_cal + 1)
+            radius = 0
 
-        return self._center, int(radius), points, binary
+        images = {'original': original, 'binary_pre_process': binary_pre_process, 'image_process': image_process,
+                  'binary_process': binary_process}
+
+        return self._center, int(radius), points, images
