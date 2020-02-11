@@ -21,7 +21,7 @@ class Main:
         self._dataset_label = 'eye_test/label'
 
         # Stops
-        self._frame_stop = 0
+        self._frame_stop = 300
         self._movie_stop = 0
         self._list_not_available = []
         self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12',
@@ -57,17 +57,21 @@ class Main:
         paint = self._white_color if color is None else color
         cv2.putText(image, label, self._position_text, self._font_text, 0.9, paint)
 
-        #cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-        #cv2.imshow('Analysis', image)
-        #cv2.waitKey(1)
-        self._save_image(image, number_frame)
+        cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
+        cv2.imshow('Analysis', image)
+        cv2.waitKey(1)
 
-    def _save_image(self, image, number_frame, title=''):
-        if title == '':
-            out = '{}/{}.png'.format(self._dataset_out_exam, number_frame)
-        else:
-            out = '{}/{}_{}.png'.format(self._dataset_out_exam, title, number_frame)
-        cv2.imwrite(out, image)
+        self._save_images({'image': image}, number_frame)
+
+    def _save_images(self, images, number_frame, center=(0, 0)):
+        for key, value in images.items():
+            if 'binary' in key:
+                image = self._mark_center(value, center)
+            else:
+                image = value
+
+            out = '{}/{}_{}.png'.format(self._dataset_out_exam, key, number_frame)
+            cv2.imwrite(out, image)
 
     def _pre_process(self, frame):
         yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
@@ -113,13 +117,12 @@ class Main:
 
             img_process = self._pre_process(original)
 
-            center, radius, points, binary = self._pupil.pupil_detect(img_process)
-            binary = self._mark_center(binary, center)
-            self._save_image(binary, number_frame, 'binary')
+            center, radius, points, images = self._pupil.pupil_detect(img_process)
+            self._save_images(images, number_frame, center)
 
             left, right, eye, binary = self._eye.eye_detect(img_process, center)
             binary = self._mark_eye(binary, left, right)
-            self._save_image(binary, number_frame, 'binary_eye')
+            self._save_images({'binary_eye': binary}, number_frame, center)
 
             img_process = self._mark_center(img_process, center)
             img_process = self._draw_circles(img_process, points)
