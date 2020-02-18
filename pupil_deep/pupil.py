@@ -19,125 +19,91 @@ class Pupil:
         self._pupul_deep = PupilDeep()
 
         # Params
-        self._thresh_binary = 25
-        self._threshold_binary = 255
-        self._radius_range = range(35, 90, 1)
+        self._threshold_min = 25
+        self._threshold_max = 255
+        self._radius_range = range(35, 100, 1)
         self._pupil_color_range = range(0, 70, 1)
         self._new_color_pupil = 10
-        self._range_search_reflex = 60
+        # self._range_search_reflex = 40
+        # self._range_search_reflex = 30
+        # self._range_search_reflex_effective = 0
 
-    # def _treatment_reflex(self, image, binary):
-    #     new_image = np.copy(image)
-    #
-    #     i, j = self._center
-    #     for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
-    #         for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
-    #             if (0 <= y < image.shape[0] - 1) and (0 <= x < image.shape[1] - 1):
-    #                 if binary[y, x] != 0:
-    #                     new_image[y, x] = self._new_color_pupil
-    #
-    #     return new_image
+        # New Params
+        self._radius_search_pupil = 100
+        self._distance_validate_pupil = 20
 
-    def _treatment_reflex(self, image, binary):
-        new_image = np.copy(image)
+        self._initial_ranges = {}
+        self._execution_ranges = {}
 
+    def _search_pupil(self, binary):
+        self._initialize_range(binary)
+
+        for x in range(self._initial_ranges['top'], self._initial_ranges['bottom']):
+            for y in range(self._initial_ranges['left'], self._initial_ranges['right']):
+                if y > self._initial_ranges['left'] and (binary[y, x] != 0):
+                    if binary[y, x + self._distance_validate_pupil] != 0:
+                        self._capture_measures(x, y)
+                    if binary[y, x - self._distance_validate_pupil] != 0:
+                        self._capture_measures(x, y)
+
+        self._calc_pupil_area()
+
+    def _initialize_range(self, binary):
         i, j = self._center
-        for x in range(i-self._range_search_reflex, i+self._range_search_reflex):
-            for y in range(j-self._range_search_reflex, j+self._range_search_reflex):
-                if (0 <= y < image.shape[0] - 1) and (0 <= x < image.shape[1] - 1):
-                    if image[y, x] not in self._pupil_color_range:
-                        new_image[y, x] = self._new_color_pupil
+        top, bottom = i - self._radius_search_pupil, i + self._radius_search_pupil
+        left, right = j - self._radius_search_pupil, j + self._radius_search_pupil
 
-        return new_image
+        if top < 0:
+            top = 0
 
-    def _binarize(self, image):
-        return cv2.threshold(image, self._thresh_binary, self._threshold_binary, cv2.THRESH_BINARY)[1]
+        if bottom > binary.shape[1]:
+            bottom = binary.shape[1]
 
-    def _calc_radius(self, image):
-        radius, points = np.array([]), []
-        for orientation in self._orientations:
-            points.append(self._search_edge(image, orientation))
+        if left < self._distance_validate_pupil:
+            left = self._distance_validate_pupil
 
-        return points, self._filter_radius(points)
+        if right + self._distance_validate_pupil > binary.shape[0]:
+            right = binary.shape[0] - self._distance_validate_pupil
 
-    def _filter_radius(self, points):
-        edges = [{'point': x, 'rad': self._calc_distance(x)} for x in points]
-        edges = sorted(edges, key=lambda k: k['rad'])
-        edges = edges[1:len(self._orientations)-1:1]
-        radius = pd.Series([x['rad'] for x in edges])
-        median = radius.median()
-        std = radius.std()
+        self._initial_ranges = {'top': top, 'bottom': bottom, 'left': left, 'right': right}
 
-        close = []
-        for rad in edges:
-            dist = abs(rad['rad'] - median)
-            if dist < std:
-                close.append({'rad': rad['rad'], 'distance': dist})
+        self._execution_ranges = {'top': bottom, 'bottom': top, 'left': right, 'right': left}
 
-        close = sorted(close, key=lambda k: k['distance'])
-        close = pd.Series(x['rad'] for x in close[0:self._number_of_points_variable_radius:1])
-        return close.mean()
+    def _capture_measures(self, x, y):
+        self._execution_ranges['top'] = x if self._execution_ranges['top'] > x else self._execution_ranges['top']
+        self._execution_ranges['left'] = y if self._execution_ranges['left'] > y else self._execution_ranges['left']
+        self._execution_ranges['right'] = y if self._execution_ranges['right'] < y else self._execution_ranges['right']
+        self._execution_ranges['bottom'] = x if self._execution_ranges['bottom'] < x else self._execution_ranges['bottom']
 
-    def _calc_distance(self, point):
-        return int((((self._center[0]-point[0]) ** 2) + ((self._center[1] - point[1]) ** 2)) ** (1/2))
+    def _calc_pupil_area(self):
+        i = int(((self._execution_ranges['bottom'] - self._execution_ranges['top']) / 2) + self._execution_ranges['top'])
+        j = int(((self._execution_ranges['right'] - self._execution_ranges['left']) / 2) + self._execution_ranges['left'])
 
-    def _search_edge(self, image, orientation):
-        i, j = self._center
-        x, y = image.shape
-        while 0 <= i < y and 0 <= j < x:
-            if image[j, i] != self._default_color:
-                break
-            else:
-                i, j = self._calc_coordinates(orientation, (i, j))
-        return [i, j]
+        self._radius = int((self._execution_ranges['right'] - self._execution_ranges['left']) / 2)
+        self._center = (i, j)
 
-    def _calc_coordinates(self, orientation, position):
-        if orientation == 'northwest':
-            position = self._inc_coordinates('north', position)
-            position = self._inc_coordinates('west', position)
-        elif orientation == 'northeast':
-            position = self._inc_coordinates('north', position)
-            position = self._inc_coordinates('east', position)
-        elif orientation == 'southwest':
-            position = self._inc_coordinates('south', position)
-            position = self._inc_coordinates('west', position)
-        elif orientation == 'southeast':
-            position = self._inc_coordinates('south', position)
-            position = self._inc_coordinates('east', position)
-        else:
-            position = self._inc_coordinates(orientation, position)
-        return position
+    def _binarize(self, image, threshold_min=0, threshold_max=0, typ=None):
+        t_type = cv2.THRESH_BINARY if typ is None else typ
+        t_min = self._threshold_min if threshold_min <= 0 else threshold_min
+        t_max = self._threshold_max if threshold_max <= 0 else threshold_max
+        return cv2.threshold(image, t_min, t_max, t_type)[1]
 
-    def _inc_coordinates(self, orientation, position):
-        i, j = position[0], position[1]
-        if orientation == 'south':
-            j += 1
-        elif orientation == 'north':
-            j -= 1
-        elif orientation == 'east':
-            i += 1
-        elif orientation == 'west':
-            i -= 1
-        return i, j
-
-    def pupil_detect(self, image, number_cal=1):
-        original = np.copy(image)
-
+    def pupil_detect(self, image):
         self._center = self._pupul_deep.run(image)
-        binary_pre_process = self._binarize(image)
-        image_process = self._treatment_reflex(original, binary_pre_process)
 
-        self._center = self._pupul_deep.run(image_process)
-        binary_process = self._binarize(image_process)
+        binary_pre_process = self._binarize(image, 10, 255, cv2.THRESH_BINARY_INV)
 
-        self._default_color = binary_process[self._center[1], self._center[0]]
+        self._search_pupil(binary_pre_process)
 
-        points, radius = self._calc_radius(binary_process)
+        images = {'binary_pre_process': binary_pre_process}
 
-        if int(radius) not in self._radius_range:
-            radius = 0
+        points = [(self._initial_ranges['top'], self._initial_ranges['left']),
+                  (self._initial_ranges['top'], self._initial_ranges['right']),
+                  (self._initial_ranges['bottom'], self._initial_ranges['left']),
+                  (self._initial_ranges['bottom'], self._initial_ranges['right']),
+                  (self._execution_ranges['top'], self._execution_ranges['left']),
+                  (self._execution_ranges['top'], self._execution_ranges['right']),
+                  (self._execution_ranges['bottom'], self._execution_ranges['left']),
+                  (self._execution_ranges['bottom'], self._execution_ranges['right'])]
 
-        images = {'original': original, 'binary_pre_process': binary_pre_process, 'image_process': image_process,
-                  'binary_process': binary_process}
-
-        return self._center, int(radius), points, images
+        return self._center, self._radius, points, images
