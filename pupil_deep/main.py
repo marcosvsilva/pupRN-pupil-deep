@@ -1,6 +1,7 @@
 import cv2
 import os
 import numpy as np
+import time
 from pupil import Pupil
 from eye import Eye
 
@@ -21,11 +22,12 @@ class Main:
         self._dataset_label = 'eye_test/label'
 
         # Stops
-        self._frame_stop = 300
+        self._frame_stop = 600
         self._movie_stop = 0
         self._list_not_available = []
         self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12',
                             '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
+        # self._focus_exam = ['25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
 
         # Params
         self._white_color = (255, 255, 0)
@@ -37,7 +39,6 @@ class Main:
 
         self._position_text = (30, 30)
         self._font_text = cv2.FONT_HERSHEY_DUPLEX
-
 
     def _add_label(self, information):
         with open('{}/{}_label.csv'.format(self._dataset_label, self._title), 'a', newline='') as file:
@@ -54,14 +55,21 @@ class Main:
             pass
 
     def _show_image(self, image, label, number_frame, color=None):
+        system_continue = True
         paint = self._white_color if color is None else color
         cv2.putText(image, label, self._position_text, self._font_text, 0.9, paint)
 
         cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
         cv2.imshow('Analysis', image)
-        cv2.waitKey(1)
+        order = cv2.waitKey(1)
 
-        self._save_images({'image': image}, number_frame)
+        if order == 32:
+            time.sleep(2)
+        elif order == ord('q'):
+            system_continue = False
+
+        self._save_images({'final': image}, number_frame)
+        return system_continue
 
     def _save_images(self, images, number_frame, center=(0, 0)):
         for key, value in images.items():
@@ -106,33 +114,40 @@ class Main:
 
     def _pupil_process(self, exam):
         number_frame = 0
+        system_continue = True
 
-        while True:
+        while system_continue:
             _, frame = exam.read()
 
             if (frame is None) or ((self._frame_stop > 0) and (number_frame >= self._frame_stop)):
                 break
 
+            if number_frame == 43:
+                print('stop')
+
             original = np.copy(frame)
+            self._save_images({'original': original}, number_frame)
 
             img_process = self._pre_process(original)
+            self._save_images({'process': img_process}, number_frame)
 
             center, radius, points, images = self._pupil.pupil_detect(img_process)
-            self._save_images(images, number_frame, center)
 
-            left, right, eye, binary = self._eye.eye_detect(img_process, center)
-            binary = self._mark_eye(binary, left, right)
-            self._save_images({'binary_eye': binary}, number_frame, center)
+            binary = images['binary_pre_process']
+            binary = self._mark_center(binary, center)
+            binary = self._draw_circles(binary, points, 2, self._white_color)
+            self._save_images({'binary': binary}, number_frame, center)
 
             img_process = self._mark_center(img_process, center)
-            img_process = self._draw_circles(img_process, points)
+            img_process = self._draw_circles(img_process, points, 2, self._white_color)
             img_process = self._draw_circles(img_process, [(center[0], center[1])], radius, self._white_color)
-            img_process = self._draw_circles(img_process, [left, right])
 
-            label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (number_frame, radius, center[0], center[1], eye)
-            self._show_image(img_process, label, number_frame)
+            img_presentation = cv2.hconcat([cv2.cvtColor(original, cv2.COLOR_BGR2GRAY), binary, img_process])
+            label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (number_frame, radius, center[0], center[1], 0)
 
-            self._add_label("{},{},{},{},{}".format(number_frame, center[0], center[1], radius, eye))
+            system_continue = self._show_image(img_presentation, label, number_frame)
+
+            self._add_label("{},{},{},{},{}".format(number_frame, center[0], center[1], radius, 0))
 
             number_frame += 1
 
