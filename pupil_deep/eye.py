@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+
 class Eye:
     def __init__(self):
         # Variables
