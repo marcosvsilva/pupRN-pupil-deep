@@ -5,6 +5,7 @@ import numpy as np
 class ProcessImage:
     def __init__(self):
         # Params
+
         self._alpha = 1.0
         self._alpha_max = 500
         self._beta = 0
@@ -13,10 +14,14 @@ class ProcessImage:
         self._gamma_max = 200
 
         # Brightness Params
-        self._min_brightness = 125
-        self._max_brightness = 130
+        self._range_accept_brightness = 10
+        self._max_size_list_color = 10
+        self._min_size_list_color_process = 3
 
-    def _pre_process(self, frame):
+        # Variables
+        self._mean_color = np.array([])
+
+    def _pre_process(self, frame, gray=False):
         yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
         yuv[:, :, 0] = cv2.equalizeHist(yuv[:, :, 0])
         bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
@@ -38,79 +43,34 @@ class ProcessImage:
 
     def _add_brightness(self, image):
         return cv2.convertScaleAbs(image, alpha=1.0, beta=10)
-        # return self._gamma_corret_image(image, 0.4)
 
     def _rem_brightness(self, image):
         return cv2.convertScaleAbs(image, alpha=1.0, beta=-10)
-        # return self._gamma_corret_image(image, 0.4)
 
-    def _treat_brightness(self, image):
-        res = np.copy(image)
+    def _treat_brightness(self, img_process, img_original):
+        mean_image = int(self._mean_color.mean())
+        range_min, range_max = mean_image - self._range_accept_brightness, mean_image + self._range_accept_brightness
+        if int(np.array(img_process).mean()) not in range(range_min, range_max, 1):
+            if int(np.array(img_process).mean()) >= range_max:
+                new_image = self._rem_brightness(img_original)
+            else:
+                new_image = self._add_brightness(img_original)
 
-        if int(image.mean()) not in range(self._min_brightness, self._max_brightness, 1):
-            res = self._gamma_corret_image(image, 3)
+            new_process = self._pre_process(new_image, gray=True)
+            img_process = self._treat_brightness(new_image, new_process)
 
-        return res
-
-        # img_mean = image.mean()
-        # if img_mean < self._min_brightness:
-        #     image = self._add_brightness(image)
-        #     return self._treat_brightness(image)
-        # elif img_mean > self._max_brightness:
-        #     image = self._rem_brightness(image)
-        #     return self._treat_brightness(image)
-        # else:
-        #     return image
+        return img_process
 
     def process_image(self, img_original):
         if img_original is None:
             return 0
 
-        aux = 0
-        alpha_init = int((self._alpha + aux) * 100)
-        while alpha_init <= self._alpha_max:
-            correct_alpha = self._on_linear_transform_alpha_trackbar(alpha_init, img_original)
-            presentation = cv2.hconcat([img_original, correct_alpha])
+        img_process = self._pre_process(img_original)
 
-            cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-            cv2.imshow('Alpha correct', presentation)
-            cv2.waitKey(1)
-            out = 'a_{}.png'.format(aux)
-            cv2.imwrite(out, presentation)
+        if len(self._mean_color) < self._max_size_list_color:
+            self._mean_color = np.append(self._mean_color, np.array(img_process).mean())
 
-            aux += 1
-            alpha_init = int((self._alpha + aux) * 100)
+        if len(self._mean_color) >= self._min_size_list_color_process:
+            img_process = self._treat_brightness(img_process, img_original)
 
-        aux = 0
-        beta_init = int((self._beta + aux) * 100)
-        while beta_init <= self._beta_max:
-            correct_beta = self._on_linear_transform_beta_trackbar(beta_init, img_original)
-            presentation = cv2.hconcat([img_original, correct_beta])
-
-            cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-            cv2.imshow('Beta correct', presentation)
-            cv2.waitKey(1)
-            out = 'b_{}.png'.format(aux)
-            cv2.imwrite(out, presentation)
-
-            aux += 1
-            beta_init = int((self._beta + aux) * 100)
-
-        aux = 0
-        gamma_init = int((self._gamma + aux) * 100)
-        while gamma_init <= self._gamma_max:
-            correct_gamma = self._on_gamma_correction_trackbar(gamma_init, img_original)
-            presentation = cv2.hconcat([img_original, correct_gamma])
-
-            cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-            cv2.imshow('Beta correct', presentation)
-            cv2.waitKey(1)
-            out = 'g_{}.png'.format(aux)
-            cv2.imwrite(out, presentation)
-
-            aux += 1
-            gamma_init = int((self._gamma + aux) * 100)
-
-        cv2.destroyAllWindows()
-
-        return 0
+        return img_process
