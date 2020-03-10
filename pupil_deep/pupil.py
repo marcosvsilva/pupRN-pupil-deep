@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import pandas as pd
 from pupil_deep import PupilDeep
 
 
@@ -8,7 +7,6 @@ class Pupil:
     def __init__(self):
         # Orientations
         self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
-        # self._orientations = ['southeast']
 
         # Variables
         self._center = []
@@ -24,9 +22,6 @@ class Pupil:
         self._radius_range = range(35, 100, 1)
         self._pupil_color_range = range(0, 70, 1)
         self._new_color_pupil = 10
-        # self._range_search_reflex = 40
-        # self._range_search_reflex = 30
-        # self._range_search_reflex_effective = 0
 
         # New Params
         self._radius_search_pupil = 100
@@ -91,11 +86,13 @@ class Pupil:
     def pupil_detect(self, image):
         self._center = self._pupul_deep.run(image)
 
+        hist = np.histogram(image)
+
         binary_pre_process = self._binarize(image, 10, 255, cv2.THRESH_BINARY_INV)
 
         self._search_pupil(binary_pre_process)
 
-        images = {'binary_pre_process': binary_pre_process}
+        images = {'binary_pre_process': binary_pre_process, 'histogram': hist}
 
         points = [(self._initial_ranges['top'], self._initial_ranges['left']),
                   (self._initial_ranges['top'], self._initial_ranges['right']),
