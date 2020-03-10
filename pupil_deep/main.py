@@ -2,6 +2,8 @@ import cv2
 import os
 import numpy as np
 import time
+import matplotlib.pyplot as pl
+from process_image import ProcessImage
 from pupil import Pupil
 from eye import Eye
 
@@ -13,6 +15,7 @@ class Main:
         self._dataset_out_exam = ''
 
         # Dependences
+        self._process = ProcessImage()
         self._pupil = Pupil()
         self._eye = Eye()
 
@@ -27,7 +30,7 @@ class Main:
         self._list_not_available = []
         # self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12',
         #                     '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
-        self._focus_exam = ['25080425_08_2019_09_08_25']
+        self._focus_exam = ['25080225_08_2019_08_37_59']
 
         # Params
         self._white_color = (255, 255, 0)
@@ -81,18 +84,12 @@ class Main:
             out = '{}/{}_{}.png'.format(self._dataset_out_exam, key, number_frame)
             cv2.imwrite(out, image)
 
-    def _pre_process(self, frame):
-        yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
-        yuv[:, :, 0] = cv2.equalizeHist(yuv[:, :, 0])
-        bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
-
-        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-        gaussian = cv2.GaussianBlur(gray, (9, 9), 3)
-        median = cv2.medianBlur(gaussian, 3)
-
-        kernel = np.ones((5, 5), np.uint8)
-        erode = cv2.erode(median, kernel=kernel, iterations=1)
-        return cv2.dilate(erode, kernel=kernel, iterations=1)
+    def _save_histogram(self, histogram, number_frame):
+        pl.hist(histogram, bins='auto')
+        pl.title('Histogram Frame: {}'.format(number_frame))
+        pl.xlabel("Value")
+        pl.ylabel("Frequency")
+        pl.savefig("{}/histogram_{}.png".format(self._dataset_out_exam, number_frame))
 
     def _mark_eye(self, image, right, left):
         cv2.line(image, (right[0], right[1]), (left[0], left[1]), self._white_color, 1)
@@ -122,14 +119,23 @@ class Main:
             if (frame is None) or ((self._frame_stop > 0) and (number_frame >= self._frame_stop)):
                 break
 
-            if number_frame == 43:
+            if number_frame == 78:
                 print('stop')
 
+            number_frame += 1
+            if number_frame < 70:
+                continue
+
             original = np.copy(frame)
+            img_orig_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
             self._save_images({'original': original}, number_frame)
 
-            img_process = self._pre_process(original)
+            img_process = self._process.process_image(original)
             self._save_images({'process': img_process}, number_frame)
+
+            img_mean = img_process.mean()
+            img_std = img_process.std()
+            img_median = np.median(img_process)
 
             center, radius, points, images = self._pupil.pupil_detect(img_process)
 
@@ -138,18 +144,27 @@ class Main:
             binary = self._draw_circles(binary, points, 2, self._white_color)
             self._save_images({'binary': binary}, number_frame, center)
 
+            # img_brightness = images['img_brightness']
+            # img_brightness = self._mark_center(img_brightness, center)
+            # img_brightness = self._draw_circles(img_brightness, points, 2, self._white_color)
+            # self._save_images({'img_brightness': img_brightness}, number_frame)
+
             img_process = self._mark_center(img_process, center)
             img_process = self._draw_circles(img_process, points, 2, self._white_color)
             img_process = self._draw_circles(img_process, [(center[0], center[1])], radius, self._white_color)
+            self._save_images({'img_process': img_process}, number_frame)
 
-            img_presentation = cv2.hconcat([cv2.cvtColor(original, cv2.COLOR_BGR2GRAY), binary, img_process])
+            self._save_histogram(images['histogram'], number_frame)
+
+            img_presentation = cv2.hconcat([img_orig_gray, binary, img_process])
             label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (number_frame, radius, center[0], center[1], 0)
 
             system_continue = self._show_image(img_presentation, label, number_frame)
 
-            self._add_label("{},{},{},{},{}".format(number_frame, center[0], center[1], radius, 0))
+            self._add_label("{},{},{},{},{},{},{},{}".format(number_frame, center[0], center[1], radius, 0, img_mean,
+                                                             img_std, img_median))
 
-            number_frame += 1
+            #number_frame += 1
 
         cv2.destroyAllWindows()
         exam.release()
@@ -172,7 +187,7 @@ class Main:
             if self._title in self._list_not_available:
                 continue
 
-            self._add_label('frame,center_x,center_y,radius,eye_size')
+            self._add_label('frame,center_x,center_y,radius,eye_size,img_mean,img_std,img_median')
             self._make_path()
 
             exam = cv2.VideoCapture('{}/{}'.format(self._dataset_path, file))
