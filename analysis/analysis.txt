@@ -1,0 +1,21 @@
+Frame 59:
+  Falha: Cálculo de área da pupila;
+  Observação: Aparentemente o cálculo de área da pupila não foi realizado de
+  forma eficinente pois o algoritmo de busca de área da pupila não conseguiu
+  identificar o segmento da pupila como pupila por ser "estreito";
+  Possivel Solução:
+
+
+Frames 79 a 95:
+  Tempo do flash
+
+Frame 96 a 102:
+  Falha: O "borrão" acima da pupila criado pela binarização foi identificado
+  como ponto máximo superior da pupila por ser um ruído evidente e de grande
+  proporção;
+
+Frame 106 a 116:
+  Falha: O "borrão" acima da pupila criado pela binarização foi identificado
+  como ponto máximo superior da pupila por ser um ruído evidente e de grande
+  proporção;
+  Possível Solução:
