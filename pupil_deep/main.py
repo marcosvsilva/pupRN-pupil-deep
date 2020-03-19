@@ -119,12 +119,12 @@ class Main:
             if (frame is None) or ((self._frame_stop > 0) and (number_frame >= self._frame_stop)):
                 break
 
-            if number_frame == 78:
-                print('stop')
+            # if number_frame == 78:
+            #     print('stop')
 
-            number_frame += 1
-            if number_frame < 70:
-                continue
+            # number_frame += 1
+            # if number_frame < 70:
+            #     continue
 
             original = np.copy(frame)
             img_orig_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
@@ -144,11 +144,6 @@ class Main:
             binary = self._draw_circles(binary, points, 2, self._white_color)
             self._save_images({'binary': binary}, number_frame, center)
 
-            # img_brightness = images['img_brightness']
-            # img_brightness = self._mark_center(img_brightness, center)
-            # img_brightness = self._draw_circles(img_brightness, points, 2, self._white_color)
-            # self._save_images({'img_brightness': img_brightness}, number_frame)
-
             img_process = self._mark_center(img_process, center)
             img_process = self._draw_circles(img_process, points, 2, self._white_color)
             img_process = self._draw_circles(img_process, [(center[0], center[1])], radius, self._white_color)
@@ -164,7 +159,7 @@ class Main:
             self._add_label("{},{},{},{},{},{},{},{}".format(number_frame, center[0], center[1], radius, 0, img_mean,
                                                              img_std, img_median))
 
-            #number_frame += 1
+            number_frame += 1
 
         cv2.destroyAllWindows()
         exam.release()
