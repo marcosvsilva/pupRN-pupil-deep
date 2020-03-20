@@ -15,12 +15,12 @@ class TreatmentBrightness:
     def _basic_linear_transform(self, alpha, beta, img_original):
         return cv2.convertScaleAbs(img_original, alpha=alpha, beta=beta)
 
-    def _gamma_correction(self, gamma, img_original):
-        look_table = np.empty((1, 256), np.uint8)
-        for i in range(256):
-            look_table[0, i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
+    def _gamma_correction(self, img_original, gamma=1.0):
+        inv_gamma = 1.0 / gamma
+        table = np.array([((i / 255.0) ** inv_gamma) * 255
+                          for i in np.arange(0, 256)]).astype("uint8")
 
-        return cv2.LUT(img_original, look_table)
+        return cv2.LUT(img_original, table)
 
     def _on_linear_transform_alpha_trackbar(self, val, img):
         alpha = val / 100
