@@ -1,0 +1,150 @@
+Frame [0 a 3]:
+* Falha: Não encontrou segmento válido para validar limite;
+
+Frame [18 a 19]:
+* Falha: Não encontrou segmento válido para validar limite;
+
+Frame [20 a 26]:
+* Falha: Ruídos da imagem;
+
+Frame [118 a 135]:
+* Falha: Tempo do flash;
+
+Frame [224 a 267]:
+* Falha: Não encontrou segmento válido para validar limite;
+
+Frame [280 a 286]:
+* Falha: Tempo do flash;
+
+Frame [297 a 304], [307 a 317], [418 a 441], 468, [471 a 473], 478:
+* Falha: Ruídos da imagem;
+
+Frame [538 a 554]:
+* Falha: Tempo do flash;
+
+Frame [601 a 616], [624 a 626], [629 a 632], 644, [659 a 660], [675 a 676]:
+* Falha: Ruídos da imagem;
+
+Frame [702 a 718]:
+* Falha: Tempo do flash;
+
+Frame [719 a 791], [793 a 795], [801 a 815], [831 a 838], [844 a 856]:
+* Falha: Ruídos da imagem;
+
+Frame 860, [869 a 884], [891 a 892]:
+* Falha: Ruídos da imagem;
+
+Frame [914 a 930]:
+* Falha: Tempo do flash;
+
+Frame [931 a 937], [941 a 947], 950, [966 a 972], 982:
+* Falha: Ruídos da imagem;
+
+Frame [1045 a 1058]:
+* Falha: Desfoque;
+
+Frame [1060 a 1111]:
+* Falha: Desfoque, Ruídos da imagem;
+
+Frame [1127 a 1144]:
+* Falha: Tempo do flash;
+
+Frame [1145 a 1162], 1164, :
+* Falha: Ruídos da imagem;
+
+Frame [1174 a 1190]:
+* Falha: Desfoque, Ruídos da imagem;
+
+Frame [1195 a 1200]:
+* Falha: Desfoque, Ruídos da imagem;
+
+Frame [1195 a 1200]:
+* Falha: Desfoque, Ruídos da imagem;
+
+Frame [1201 a 1202], [1222 a 1237]:
+* Falha: Não encontrou segmento válido para validar limite;
+
+Frame [1263 a 1290];
+* Falha: Reflexo no vídeo original encobriu um limite;
+
+Frame [1291 a 1293];
+* Falha: Ruídos da imagem;
+
+Frame [1294 a 1316];
+* Falha: Reflexo no vídeo original encobriu um limite;
+
+Frame [1348 a 1364]:
+* Falha: Tempo do flash;
+
+Frame [1401 a 1439];
+* Falha: Ruídos da imagem;
+
+Frame [1441 a 1542];
+* Falha: Reflexo no vídeo original encobriu um limite; Ruídos da imagem;
+
+Frame [1543 a 1559]:
+* Falha: Tempo do flash;
+
+Frame [1560 a 1600];
+* Falha: Ruídos da imagem;
+
+Frame [1601 a 1622], 1630, 1644, 1660;
+* Falha: Ruídos da imagem;
+
+Frame [1681 a 1697]:
+* Falha: Tempo do flash;
+
+Frame [1698 a 1721], [1728 a 1730], [1733 a 1736], [1774 a 1778], 1782, 1796;
+* Falha: Ruídos da imagem;
+
+
+**********************************************************************
+Falha: Não encontrou segmento válido para validar limite;
+
+Observação: A área da pupila nos limites ficam muito estreita a ponto
+do algoritmo não conseguir identificar uma sequência válida para limitar a
+pupila na parte superior;
+
+Possível solução:
+
+**********************************************************************
+
+Falha: Ruídos da imagem;
+
+Observação: O "borrão" nos limites da pupila criado pela binarização foi
+identificado como pontos máximos da pupila por ser um ruído evidente
+e de grande proporção;
+
+Possível solução:
+
+**********************************************************************
+
+Falha: Tempo do flash;
+
+Observação: A alta variação da claridade da imagem, trouxe uma imagem
+binarizada de impossível detecção do seguimento da pupila;
+
+Possível solução:
+
+**********************************************************************
+
+* Falha: Desfoque;
+
+Observação: A imagem original possui um nível muito alto de desfoque e/ou
+uma quantidade elevada de reflexo no interior da pupila, levando a imagem
+binarizada completamente desarmoniosa!
+
+Possível solução:
+
+**********************************************************************
+
+* Falha: Reflexo no vídeo original encobriu um limite;
+
+Observação: Um reflexo no vídeo original encobriu um limite da pupila
+fazendo com o que o cálculo de área utilizasse medidas diferentes
+da pupila original, com isso, fazendo o raio ficar menor e o centro
+fora de posição!
+
+Possível solução:
+
+**********************************************************************
