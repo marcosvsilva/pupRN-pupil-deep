@@ -1,21 +1,41 @@
-Frame 59:
-  Falha: Cálculo de área da pupila;
-  Observação: Aparentemente o cálculo de área da pupila não foi realizado de
-  forma eficinente pois o algoritmo de busca de área da pupila não conseguiu
-  identificar o segmento da pupila como pupila por ser "estreito";
-  Possivel Solução:
+Frame [58 a 66]:
+* Falha: Não encontrou segmento válido para validar limite;
 
+Frames [79 a 95]:
+* Falha: Tempo do flash;
 
-Frames 79 a 95:
-  Tempo do flash
+Frame [96 a 102], [106 a 116]:
+* Falha: Ruídos da imagem;
 
-Frame 96 a 102:
-  Falha: O "borrão" acima da pupila criado pela binarização foi identificado
-  como ponto máximo superior da pupila por ser um ruído evidente e de grande
-  proporção;
+Frame [214 a 233], [257 a 263], [267 a 275]:
+* Falha: Não encontrou segmento válido para validar limite;
 
-Frame 106 a 116:
-  Falha: O "borrão" acima da pupila criado pela binarização foi identificado
-  como ponto máximo superior da pupila por ser um ruído evidente e de grande
-  proporção;
-  Possível Solução:
+**********************************************************************
+Falha: Não encontrou segmento válido para validar limite;
+
+Observação: A área da pupila nos limites ficam muito estreita a ponto
+do algoritmo não conseguir identificar uma sequência válida para limitar a
+pupila na parte superior;
+
+Possível solução:
+
+**********************************************************************
+
+Falha: Ruídos da imagem;
+
+Observação: O "borrão" nos limites da pupila criado pela binarização foi
+identificado como pontos máximos da pupila por ser um ruído evidente
+e de grande proporção;
+
+Possível solução:
+
+**********************************************************************
+
+Falha: Tempo do flash;
+
+Observação: A alta variação da claridade da imagem, trouxe uma imagem
+binarizada de impossível detecção do seguimento da pupila;
+
+Possível solução:
+
+**********************************************************************
