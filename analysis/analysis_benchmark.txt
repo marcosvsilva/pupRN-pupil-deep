@@ -1,100 +1,94 @@
-Frame [0 a 3]:
+Frame [0 a 2], [17 a 18]:
 * Falha: Não encontrou segmento válido para validar limite;
 
-Frame [18 a 19]:
-* Falha: Não encontrou segmento válido para validar limite;
-
-Frame [20 a 26]:
+Frame [19 a 25]:
 * Falha: Ruídos da imagem;
 
-Frame [118 a 135]:
+Frame [118 a 134]:
 * Falha: Tempo do flash;
 
-Frame [224 a 267]:
+Frame [224 a 266]:
 * Falha: Não encontrou segmento válido para validar limite;
 
 Frame [280 a 286]:
 * Falha: Tempo do flash;
 
-Frame [297 a 304], [307 a 317], [418 a 441], 468, [471 a 473], 478:
+Frame [296 a 303], [306 a 316], [417 a 440], 467, [470 a 472], 477:
 * Falha: Ruídos da imagem;
 
-Frame [538 a 554]:
+Frame [436 a 439]:
+* Falha: Não encontrou segmento válido para validar limite;
+
+Frame [537 a 553]:
 * Falha: Tempo do flash;
 
-Frame [601 a 616], [624 a 626], [629 a 632], 644, [659 a 660], [675 a 676]:
-* Falha: Ruídos da imagem;
-
-Frame [702 a 718]:
-* Falha: Tempo do flash;
-
-Frame [719 a 791], [793 a 795], [801 a 815], [831 a 838], [844 a 856]:
-* Falha: Ruídos da imagem;
-
-Frame 860, [869 a 884], [891 a 892]:
-* Falha: Ruídos da imagem;
-
-Frame [914 a 930]:
-* Falha: Tempo do flash;
-
-Frame [931 a 937], [941 a 947], 950, [966 a 972], 982:
-* Falha: Ruídos da imagem;
-
-Frame [1045 a 1058]:
+Frame [600 a 615]:
 * Falha: Desfoque;
 
-Frame [1060 a 1111]:
-* Falha: Desfoque, Ruídos da imagem;
+Frame [623 a 625], [628 a 631], [643], [658 a 659], [674 a 675]:
+* Falha: Ruídos da imagem;
+
+Frame [701 a 718]:
+* Falha: Tempo do flash;
+
+Frame [719 a 790], [792 a 794], [800 a 814], [830 a 837], [843 a 855], [859], [868 a 883], [890 a 891]:
+* Falha: Ruídos da imagem;
+
+Frame [913 a 930]:
+* Falha: Tempo do flash;
+
+Frame [931 a 936], [940 a 946], [949], [965 a 971], [981]:
+* Falha: Ruídos da imagem;
+
+Frame [1044 a 1057]:
+* Falha: Desfoque;
+
+Frame [1059 a 1064]:
+* Falha: Não encontrou segmento válido para validar limite;
+
+Frame [1065 a 1110]:
+* Falha: Desfoque;
+
+Frame [1011 a 1126]:
+* Falha: Desfoque;
 
 Frame [1127 a 1144]:
 * Falha: Tempo do flash;
 
-Frame [1145 a 1162], 1164, :
+Frame [1144 a 1163], [1172 a 1191]:
+* Falha: Desfoque;
+
+Frame [1198 a 1199]:
 * Falha: Ruídos da imagem;
 
-Frame [1174 a 1190]:
-* Falha: Desfoque, Ruídos da imagem;
-
-Frame [1195 a 1200]:
-* Falha: Desfoque, Ruídos da imagem;
-
-Frame [1195 a 1200]:
-* Falha: Desfoque, Ruídos da imagem;
-
-Frame [1201 a 1202], [1222 a 1237]:
+Frame [1200 a 1201], [1221 a 1236], [1262 a 1289]:
 * Falha: Não encontrou segmento válido para validar limite;
 
-Frame [1263 a 1290];
-* Falha: Reflexo no vídeo original encobriu um limite;
-
-Frame [1291 a 1293];
+Frame [1290 a 1292];
 * Falha: Ruídos da imagem;
 
-Frame [1294 a 1316];
+Frame [1293 a 1330];
 * Falha: Reflexo no vídeo original encobriu um limite;
 
-Frame [1348 a 1364]:
+Frame [1347 a 1363]:
 * Falha: Tempo do flash;
 
-Frame [1401 a 1439];
+Frame [1400 a 1429], [1432 a 1438], [1440 a 1441], [1443], [1445 a 1454], [1456], [1459 a 1468], [1472], [1496], [1520 a 1521], [1523 a 1537];
 * Falha: Ruídos da imagem;
 
-Frame [1441 a 1542];
+Frame [1440 a 1541];
 * Falha: Reflexo no vídeo original encobriu um limite; Ruídos da imagem;
 
-Frame [1543 a 1559]:
+Frame [1542 a 1558]:
 * Falha: Tempo do flash;
 
-Frame [1560 a 1600];
+Frame [1559 a 1616], [1618], [1620 a 1621], [1629], [1643], [1659];
 * Falha: Ruídos da imagem;
 
-Frame [1601 a 1622], 1630, 1644, 1660;
-* Falha: Ruídos da imagem;
-
-Frame [1681 a 1697]:
+Frame [1680 a 1696]:
 * Falha: Tempo do flash;
 
-Frame [1698 a 1721], [1728 a 1730], [1733 a 1736], [1774 a 1778], 1782, 1796;
+Frame [1697 a 1720], [1727 a 1729], [1732 a 1734], [1735], [1773 a 1777], [1781], [1795];
 * Falha: Ruídos da imagem;
 
 
