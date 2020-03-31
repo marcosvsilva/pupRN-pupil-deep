@@ -19,18 +19,19 @@ class Main:
         self._pupil = Pupil()
         self._eye = Eye()
 
-        # Directories
-        self._dataset_path = 'eye_test/movies'
-        self._dataset_out = 'eye_test/out'
-        self._dataset_label = 'eye_test/label'
+        # Directoris
+        self._projects_path = '/media/marcos/Dados/Projects'
+
+        self._dataset_path = '{}/Datasets/exams'.format(self._projects_path)
+        self._dataset_out = '{}/Results/PupilDeep/Frames'.format(self._projects_path)
+        self._dataset_label = '{}/Results/PupilDeep/Labels'.format(self._projects_path)
 
         # Stops
-        self._frame_stop = 300
+        self._frame_stop = 0
         self._movie_stop = 0
         self._list_not_available = []
-        # self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12',
-        #                     '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
-        self._focus_exam = ['25080225_08_2019_08_37_59']
+        # self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12', '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
+        self._focus_exam = ['benchmark']
 
         # Params
         self._white_color = (255, 255, 0)
@@ -41,6 +42,7 @@ class Main:
         self._size_point_pupil = 5
 
         self._position_text = (30, 30)
+
         self._font_text = cv2.FONT_HERSHEY_DUPLEX
 
     def _add_label(self, information):
@@ -62,14 +64,14 @@ class Main:
         paint = self._white_color if color is None else color
         cv2.putText(image, label, self._position_text, self._font_text, 0.9, paint)
 
-        cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
-        cv2.imshow('Analysis', image)
-        order = cv2.waitKey(1)
-
-        if order == 32:
-            time.sleep(2)
-        elif order == ord('q'):
-            system_continue = False
+        # cv2.namedWindow('Analysis', cv2.WINDOW_NORMAL)
+        # cv2.imshow('Analysis', image)
+        # order = cv2.waitKey(1)
+        #
+        # if order == 32:
+        #     time.sleep(2)
+        # elif order == ord('q'):
+        #     system_continue = False
 
         self._save_images({'final': image}, number_frame)
         return system_continue
@@ -119,11 +121,8 @@ class Main:
             if (frame is None) or ((self._frame_stop > 0) and (number_frame >= self._frame_stop)):
                 break
 
-            # if number_frame == 78:
-            #     print('stop')
-
-            # number_frame += 1
-            # if number_frame < 70:
+            # if number_frame < 1000:
+            #     number_frame += 1
             #     continue
 
             original = np.copy(frame)
@@ -165,6 +164,8 @@ class Main:
         exam.release()
 
     def run(self):
+        start_time = time.time()
+
         files = os.listdir(self._dataset_path)
 
         number_movie = 0
@@ -189,6 +190,9 @@ class Main:
             self._pupil_process(exam)
 
             number_movie += 1
+
+        end_time = time.time()
+        print('Execition time: {} minuts'.format((end_time - start_time) / 60))
 
 
 main = Main()
