@@ -68,7 +68,7 @@ Frame [1290 a 1292];
 * Falha: Ruídos da imagem;
 
 Frame [1293 a 1330];
-* Falha: Reflexo no vídeo original encobriu um limite;
+* Falha: Não encontrou segmento válido para validar limite;
 
 Frame [1347 a 1363]:
 * Falha: Tempo do flash;
@@ -77,7 +77,7 @@ Frame [1400 a 1429], [1432 a 1438], [1440 a 1441], [1443], [1445 a 1454], [1456]
 * Falha: Ruídos da imagem;
 
 Frame [1440 a 1541];
-* Falha: Reflexo no vídeo original encobriu um limite; Ruídos da imagem;
+* Falha: Não encontrou segmento válido para validar limite;
 
 Frame [1542 a 1558]:
 * Falha: Tempo do flash;
