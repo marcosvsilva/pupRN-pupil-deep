@@ -10,14 +10,17 @@ from eye import Eye
 
 class Main:
     def __init__(self):
-        # Variables
-        self._title = ''
-        self._dataset_out_exam = ''
+        # Global variables for executions
+        self._title_exam = ''
+        self._path_dataset_out = ''
 
         # Dependences
         self._process = ProcessImage()
         self._pupil = Pupil()
         self._eye = Eye()
+
+        # Limit cash dependences
+        self._max_execution_with_cash = 20
 
         # Directoris
         self._projects_path = '/media/marcos/Dados/Projects'
@@ -26,34 +29,46 @@ class Main:
         self._dataset_out = '{}/Results/PupilDeep/Frames'.format(self._projects_path)
         self._dataset_label = '{}/Results/PupilDeep/Labels'.format(self._projects_path)
 
-        # Stops
+        # Stops and executions
         self._frame_stop = 0
+        self._frame_start = 0
+
         self._movie_stop = 0
         self._list_not_available = []
-        # self._focus_exam = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12', '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
-        self._focus_exam = ['benchmark']
+        # self._list_available = ['25080225_08_2019_08_37_59', '25080225_08_2019_08_40_12', '25080425_08_2019_08_53_48', '25080425_08_2019_09_08_25']
+        self._list_available = ['benchmark']
 
-        # Params
+        # Params color
         self._white_color = (255, 255, 0)
         self._gray_color = (170, 170, 0)
-        self._black_color = (0, 0, 0)
-        self._black_color_range = range(0, 150, 1)
 
+        # Params text and circle print image
+        self._position_text = (30, 30)
+        self._font_text = cv2.FONT_HERSHEY_DUPLEX
         self._size_point_pupil = 5
 
-        self._position_text = (30, 30)
+        # Params dataset labels out
+        self._title_label = 'frame,center_x,center_y,radius,flash,eye_size,img_mean,img_std,img_median'
 
-        self._font_text = cv2.FONT_HERSHEY_DUPLEX
+    def _clear_cash(self):
+        print('clear_cash')
+        # # self._process = None
+        # del self._pupil
+        # del self._eye
+        #
+        # # self._process = ProcessImage()
+        # self._pupil = Pupil()
+        # self._eye = Eye()
 
     def _add_label(self, information):
-        with open('{}/{}_label.csv'.format(self._dataset_label, self._title), 'a', newline='') as file:
+        with open('{}/{}_label.csv'.format(self._dataset_label, self._title_exam), 'a', newline='') as file:
             file.write('{}\n'.format(information))
             file.close()
 
     def _make_path(self, path=''):
         try:
             if path == '':
-                os.mkdir(self._dataset_out_exam)
+                os.mkdir(self._path_dataset_out)
             else:
                 os.mkdir(path)
         except FileExistsError:
@@ -72,7 +87,7 @@ class Main:
         #     time.sleep(2)
         # elif order == ord('q'):
         #     system_continue = False
-
+        
         self._save_images({'final': image}, number_frame)
         return system_continue
 
@@ -83,7 +98,7 @@ class Main:
             else:
                 image = value
 
-            out = '{}/{}_{}.png'.format(self._dataset_out_exam, key, number_frame)
+            out = '{}/{}_{}.png'.format(self._path_dataset_out, key, number_frame)
             cv2.imwrite(out, image)
 
     def _save_histogram(self, histogram, number_frame):
@@ -91,7 +106,7 @@ class Main:
         pl.title('Histogram Frame: {}'.format(number_frame))
         pl.xlabel("Value")
         pl.ylabel("Frequency")
-        pl.savefig("{}/histogram_{}.png".format(self._dataset_out_exam, number_frame))
+        pl.savefig("{}/histogram_{}.png".format(self._path_dataset_out, number_frame))
 
     def _mark_eye(self, image, right, left):
         cv2.line(image, (right[0], right[1]), (left[0], left[1]), self._white_color, 1)
@@ -121,20 +136,21 @@ class Main:
             if (frame is None) or ((self._frame_stop > 0) and (number_frame >= self._frame_stop)):
                 break
 
-            # if number_frame < 1000:
-            #     number_frame += 1
-            #     continue
+            if (self._frame_start > 0) and (number_frame < self._frame_start):
+                number_frame += 1
+                continue
+
+            if (number_frame > 10) and (number_frame % self._max_execution_with_cash) == 0:
+                self._clear_cash()
 
             original = np.copy(frame)
             img_orig_gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
             self._save_images({'original': original}, number_frame)
 
-            img_process = self._process.process_image(original)
+            img_process, flash = self._process.process_image(original)
             self._save_images({'process': img_process}, number_frame)
 
-            img_mean = img_process.mean()
-            img_std = img_process.std()
-            img_median = np.median(img_process)
+            img_mean, img_std, img_median = img_process.mean(), img_process.std(), np.median(img_process)
 
             center, radius, points, images = self._pupil.pupil_detect(img_process)
 
@@ -151,12 +167,13 @@ class Main:
             self._save_histogram(images['histogram'], number_frame)
 
             img_presentation = cv2.hconcat([img_orig_gray, binary, img_process])
-            label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (number_frame, radius, center[0], center[1], 0)
+            label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d);Flash=(%d)' % (number_frame, radius, center[0],
+                                                                               center[1], 0, flash)
 
             system_continue = self._show_image(img_presentation, label, number_frame)
 
-            self._add_label("{},{},{},{},{},{},{},{}".format(number_frame, center[0], center[1], radius, 0, img_mean,
-                                                             img_std, img_median))
+            self._add_label("{},{},{},{},{},{},{},{}".format(number_frame, center[0], center[1], radius, flash, 0,
+                                                             img_mean, img_std, img_median))
 
             number_frame += 1
 
@@ -174,25 +191,26 @@ class Main:
             if (self._movie_stop > 0) and (number_movie >= self._movie_stop):
                 break
 
-            self._title = file.replace('.mp4', '')
-            self._dataset_out_exam = '{}/{}'.format(self._dataset_out, self._title)
+            self._title_exam = file.replace('.mp4', '')
+            self._path_dataset_out = '{}/{}'.format(self._dataset_out, self._title_exam)
 
-            if (len(self._focus_exam) > 0) and (self._title not in self._focus_exam):
+            if (len(self._list_available) > 0) and (self._title_exam not in self._list_available):
                 continue
 
-            if self._title in self._list_not_available:
+            if self._title_exam in self._list_not_available:
                 continue
 
-            self._add_label('frame,center_x,center_y,radius,eye_size,img_mean,img_std,img_median')
+            self._add_label(self._title_label)
             self._make_path()
 
+            # self._clear_cash()
             exam = cv2.VideoCapture('{}/{}'.format(self._dataset_path, file))
             self._pupil_process(exam)
 
             number_movie += 1
 
         end_time = time.time()
-        print('Execition time: {} minuts'.format((end_time - start_time) / 60))
+        self._add_label('Execition time: {} minuts'.format((end_time - start_time) / 60))
 
 
 main = Main()
