@@ -128,7 +128,6 @@ class Network:
     def build_net(self):
         print(self.name)
         with tf.variable_scope(self.name, reuse=self.reuse):
-            
             x = tf.reshape(self.imgs, [1, tf.shape(self.imgs)[0], tf.shape(self.imgs)[1], 1])
             orig_shapes = [tf.shape(self.imgs)[0], tf.shape(self.imgs)[1]]
 
@@ -232,5 +231,4 @@ class PupilDeep:
 
     def restart_tracker(self):
         tf.reset_default_graph()
-        # plt.close('all')
         self.sess.close()
