@@ -1,45 +1,46 @@
 import numpy as np
 import cv2
-from pupil_deep import PupilDeep
 
 
 class Pupil:
-    def __init__(self):
+    def __init__(self, pupil_deep):
+        # Dependence
+        self._pupil_deep = pupil_deep
+
         # Orientations
         self._orientations = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
 
         # Variables
         self._center = []
-        self._default_color = 0
-        self._number_of_points_variable_radius = 2
-
-        # Dependences
-        self._pupul_deep = PupilDeep()
-
-        # Params
-        self._threshold_min = 25
-        self._threshold_max = 255
-        self._radius_range = range(35, 100, 1)
-        self._pupil_color_range = range(0, 70, 1)
-        self._new_color_pupil = 10
-
-        # New Params
-        self._radius_search_pupil = 100
-        self._distance_validate_pupil = 20
-
         self._initial_ranges = {}
         self._execution_ranges = {}
+
+        # Params binarize
+        self._threshold_type = cv2.THRESH_BINARY_INV
+        self._threshold_min = 10
+        self._threshold_max = 255
+
+        # Params search pupil
+        self._radius_search_pupil = 80
+        # self._radius_search_pupil = 100
+        # self._radius_search_pupil = 60
+
+        self._distance_validate_pupil = 20
+        # self._distance_validate_pupil = 10
 
     def _search_pupil(self, binary):
         self._initialize_range(binary)
 
+        rows, columns = binary.shape
+
         for x in range(self._initial_ranges['top'], self._initial_ranges['bottom']):
             for y in range(self._initial_ranges['left'], self._initial_ranges['right']):
                 if y > self._initial_ranges['left'] and (binary[y, x] != 0):
-                    if binary[y, x + self._distance_validate_pupil] != 0:
-                        self._capture_measures(x, y)
-                    if binary[y, x - self._distance_validate_pupil] != 0:
-                        self._capture_measures(x, y)
+                    if (x + self._distance_validate_pupil <= rows) and (x - self._distance_validate_pupil > 0):
+                        if binary[y, x + self._distance_validate_pupil] != 0:
+                            self._capture_measures(x, y)
+                        if binary[y, x - self._distance_validate_pupil] != 0:
+                            self._capture_measures(x, y)
 
         self._calc_pupil_area()
 
@@ -77,18 +78,37 @@ class Pupil:
         self._radius = int((self._execution_ranges['right'] - self._execution_ranges['left']) / 2)
         self._center = (i, j)
 
-    def _binarize(self, image, threshold_min=0, threshold_max=0, typ=None):
-        t_type = cv2.THRESH_BINARY if typ is None else typ
-        t_min = self._threshold_min if threshold_min <= 0 else threshold_min
-        t_max = self._threshold_max if threshold_max <= 0 else threshold_max
-        return cv2.threshold(image, t_min, t_max, t_type)[1]
+    def _calc_mean_binary(self, binary):
+        self._initialize_range(binary)
 
-    def pupil_detect(self, image):
-        self._center = self._pupul_deep.run(image)
+        color_pupil_interest_area = np.array([])
+        for x in range(self._initial_ranges['top'], self._initial_ranges['bottom']):
+            for y in range(self._initial_ranges['left'], self._initial_ranges['right']):
+                color_pupil_interest_area = np.append(color_pupil_interest_area, binary[y, x])
+
+        return int(color_pupil_interest_area.mean())
+
+    def _binarize(self, image, threshold_min, threshold_max):
+        return cv2.threshold(image, threshold_min, threshold_max, self._threshold_type)[1]
+
+    def pupil_detect(self, image, adjust_binary_min=0, adjust_binary_max=0):
+        original = np.copy(image)
+
+        threshold_min = self._threshold_min + adjust_binary_min
+        threshold_max = self._threshold_max - adjust_binary_max
+
+        self._center = self._pupil_deep.run(image)
+
+        binary_pre_process = self._binarize(image, threshold_min, threshold_max)
+        mean_binary = self._calc_mean_binary(binary_pre_process)
+
+        if mean_binary < 60:
+            return self.pupil_detect(original, adjust_binary_min+1, adjust_binary_max)
+
+        if mean_binary > 95:
+            return self.pupil_detect(original, adjust_binary_min, adjust_binary_max+1)
 
         hist = np.histogram(image)
-
-        binary_pre_process = self._binarize(image, 10, 255, cv2.THRESH_BINARY_INV)
 
         self._search_pupil(binary_pre_process)
 
@@ -103,4 +123,4 @@ class Pupil:
                   (self._execution_ranges['bottom'], self._execution_ranges['left']),
                   (self._execution_ranges['bottom'], self._execution_ranges['right'])]
 
-        return self._center, self._radius, points, images
+        return self._center, self._radius, points, images, mean_binary
