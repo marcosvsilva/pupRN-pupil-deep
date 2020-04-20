@@ -4,23 +4,21 @@ import numpy as np
 
 class ProcessImage:
     def __init__(self):
+        # Flash params
+        self._length_list_color = 10
+        self._range_color = 100
+        self._median_color = 0
 
-        # Params
+        # Params process image
         self._alpha = 1.0
         self._alpha_max = 500
         self._beta = 0
         self._beta_max = 200
         self._gamma = 1.0
         self._gamma_max = 200
-        self._max_recursion = 10
-
-        # Brightness Params
-        self._range_accept_brightness = 10
-        self._max_size_list_color = 10
-        self._min_size_list_color_process = 3
 
         # Variables
-        self._mean_color = np.array([])
+        self._list_color_images = np.array([])
 
     def _pre_process(self, frame):
         yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
@@ -35,46 +33,18 @@ class ProcessImage:
         erode = cv2.erode(median, kernel=kernel, iterations=1)
         return cv2.dilate(erode, kernel=kernel, iterations=1)
 
-    def _gamma_correction(self, img_original, gamma):
-        inv_gamma = 1.0 / gamma
-        table = np.array([((i / 255.0) ** inv_gamma) * 255
-                          for i in np.arange(0, 256)]).astype("uint8")
-
-        return cv2.LUT(img_original, table)
-
-    def _add_brightness(self, image):
-        return self._gamma_correction(image, gamma=1.3)
-
-    def _rem_brightness(self, image):
-        return self._gamma_correction(image, gamma=0.7)
-
-    def _treat_brightness(self, img_process, img_original):
-        mean_images = int(self._mean_color.mean())
-        range_limit = range(mean_images - self._range_accept_brightness, mean_images + self._range_accept_brightness, 1)
-
-        recursion = 0
-        while (int(np.array(img_original).mean()) not in range_limit) and (recursion < self._max_recursion):
-            if int(np.array(img_original).mean()) >= max(range_limit):
-                img_original = self._rem_brightness(img_original)
-            else:
-                img_original = self._add_brightness(img_original)
-
-            img_process = self._pre_process(img_original)
-            recursion += 1
-
-        return img_process
-
     def process_image(self, img_original):
+        reflex = False
         if img_original is None:
             return 0
 
-        if len(self._mean_color) < self._max_size_list_color:
-            self._mean_color = np.append(self._mean_color, np.array(img_original).mean())
+        if len(self._list_color_images) >= self._length_list_color:
+            normal_range = range(self._median_color - self._range_color, self._median_color + self._range_color, 1)
+            reflex = int(img_original.mean()) not in normal_range
+        else:
+            self._list_color_images = np.append(self._list_color_images, np.array(img_original).mean())
+            self._median_color = int(self._list_color_images.mean())
 
         img_process = self._pre_process(img_original)
 
-        self._recursion = 0
-        if len(self._mean_color) >= self._min_size_list_color_process:
-            img_process = self._treat_brightness(img_process, img_original)
-
-        return img_process
+        return img_process, int(reflex)
