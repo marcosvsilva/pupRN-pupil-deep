@@ -1,4 +1,3 @@
-import numpy as np
 import cv2
 
 
@@ -19,7 +18,7 @@ class Eye:
 
     def _eye_edge_up(self, image, position, orientation):
         i, j = position
-        # Erro aqui - RecursionError: maximum recursion depth exceeded in comparison
+        # TODO: FAIL HERE - RecursionError: maximum recursion depth exceeded in comparison
         if (0 <= j < self._shape[0] - 1) and (0 <= i < self._shape[1] - 1):
             if image[j, i] == self._default_color:
                 i -= 1 if orientation == 'left' else - 1
