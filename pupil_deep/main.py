@@ -6,7 +6,7 @@ from execution import Execution
 class Main:
     def __init__(self):
         # Directoris
-        self._projects_path = '/media/marcos/Dados/Projects'
+        self._projects_path = '/Projects' 
 
         self._path_dataset = '{}/Datasets/Exams'.format(self._projects_path)
         self._path_information = '{}/Datasets/Exams/Information_Exams'.format(self._projects_path)
