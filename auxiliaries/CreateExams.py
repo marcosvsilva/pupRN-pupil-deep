@@ -15,9 +15,16 @@ def create_exam(list_frames, path_writer, size_writer, fps):
 exam = ''
 
 path_original_exams = '/Projects/Datasets/Exams'
+# path_original_exams = '/media/marcos/Dados/Projects/Datasets/Exams'
+
 path_exams = '/Projects/Results/PupilDeep/Frames'
+# path_exams = '/media/marcos/Dados/Projects/Results/PupilDeep/Frames/not_use.'
+
 path_labels = '/Projects/Results/PupilDeep/Labels'
-path_out = '/Projects/Results/PupilDeep/Exams'.format(path_exams)
+# path_labels = '/media/marcos/Dados/Projects/Results/PupilDeep/Labels/not_use.'
+
+path_out = '/Projects/Results/PupilDeep/Exams'
+# path_out = '/media/marcos/Dados/Projects/Results/PupilDeep/Exams'
 
 print(path_original_exams, '\n', path_exams, '\n', path_labels, '\n', path_out)
 
@@ -46,7 +53,7 @@ for ex in paths_frames:
 
     number_files = int(len(os.listdir(ex)) / 5)
     for i in range(number_files):       
-        path_img = 'img_process__{}.png'.format(i)
+        path_img = 'img_process_{}.png'.format(i)
         img = cv2.imread('{}/{}'.format(ex, path_img))
         img_array.append(img)
 
