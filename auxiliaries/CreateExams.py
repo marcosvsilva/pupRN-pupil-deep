@@ -46,24 +46,12 @@ for ex in paths_frames:
 
     number_files = int(len(os.listdir(ex)) / 5)
     for i in range(number_files):       
-        path_final = 'final_{}.png'.format(i)
-
-        im_final = cv2.imread('{}/{}'.format(ex, path_final))
-
-        im_pres = im_final
-
-        label = 'Frame=%d;Radius=%d;Center=(%d,%d);Eye=(%d)' % (dataset['frame'][i],
-                                                                dataset['radius'][i],
-                                                                dataset['center_x'][i],
-                                                                dataset['center_y'][i],
-                                                                0)
-
-        cv2.putText(im_pres, label, (600, 30), cv2.FONT_HERSHEY_DUPLEX, 0.9, (170, 170, 0))
-
-        img_array.append(im_pres)
+        path_img = 'img_process__{}.png'.format(i)
+        img = cv2.imread('{}/{}'.format(ex, path_img))
+        img_array.append(img)
 
         if size is None:
-            height, width, _ = im_pres.shape
+            height, width, _ = img.shape
             size = (width, height)
 
     create_exam(img_array, path_writer, size, fps)
