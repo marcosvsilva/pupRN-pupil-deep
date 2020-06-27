@@ -1,4 +1,4 @@
-# PupilDeep Tec2
+# PupilDeep Tec1 and Tec2
 
 Project for Detection pupil real time and extract pupillary features! \
 Project contain deep learning for detect pupil center and pupil size and auxiliriares for create and mode dataset!
